@@ -30,6 +30,7 @@ from bons_retour_module import build_bons_retour_router, seed_bons_retour
 from comptabilite_module import build_comptabilite_router, seed_comptabilite
 from administration_module import build_utilisateurs_router, build_parametres_router, seed_parametres
 from recherche_module import build_recherche_router
+from documents_ai_module import build_documents_ai_router, seed_documents_demo
 from dashboard_data import build_dashboard_payload
 
 # ============================================================================
@@ -270,6 +271,7 @@ api_router.include_router(build_comptabilite_router(db, resolve_user))
 api_router.include_router(build_utilisateurs_router(db, resolve_user))
 api_router.include_router(build_parametres_router(db, resolve_user))
 api_router.include_router(build_recherche_router(db, resolve_user))
+api_router.include_router(build_documents_ai_router(db, resolve_user))
 
 # Include API router in main app
 app.include_router(api_router)
@@ -367,6 +369,13 @@ async def startup_event():
         logger.info("Seeding stock movements...")
         count = await seed_mouvements_stock(db, "admin_super_001")
         logger.info(f"✅ {count} stock movements seeded")
+    
+    # Seed documents demo if not exists
+    doc_count = await db.documents_intelligents.count_documents({})
+    if doc_count == 0:
+        logger.info("Seeding demo documents...")
+        count = await seed_documents_demo(db, "admin_super_001")
+        logger.info(f"✅ {count} demo documents seeded")
     
     logger.info("✅ ERP EDITIONS FABS-CI backend ready!")
 
