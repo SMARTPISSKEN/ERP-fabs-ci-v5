@@ -474,46 +474,7 @@ async def seed_real_products(db: AsyncIOMotorDatabase, owner_user_id: str) -> in
 # Catalogue officiel EDITIONS FABS-CI (idempotent — ajoute uniquement les titres
 # qui ne sont pas déjà présents dans la base, comparaison par `titre` exact).
 # ---------------------------------------------------------------------------
-REAL_PRODUCTS = [
-    # --- Cahiers d'écriture & pré-lecture (Primaire) ---
-    {"titre": "MON CAHIER DE PRELECTURE CP1", "auteur": "Collectif FABS-CI", "collection": "Bases",       "categorie": "primaire",     "niveau_scolaire": "CP1", "prix_achat": 900,  "prix_vente": 1500},
-    {"titre": "MON CAHIER D'ECRITURE CP1",    "auteur": "Collectif FABS-CI", "collection": "Bases",       "categorie": "primaire",     "niveau_scolaire": "CP1", "prix_achat": 900,  "prix_vente": 1500},
-    {"titre": "MON CAHIER D'ECRITURE CP2",    "auteur": "Collectif FABS-CI", "collection": "Bases",       "categorie": "primaire",     "niveau_scolaire": "CP2", "prix_achat": 900,  "prix_vente": 1500},
-    {"titre": "MON CAHIER D'ECRITURE CE1",    "auteur": "Collectif FABS-CI", "collection": "Bases",       "categorie": "primaire",     "niveau_scolaire": "CE1", "prix_achat": 1000, "prix_vente": 1700},
-    {"titre": "MON CAHIER D'ECRITURE CE2",    "auteur": "Collectif FABS-CI", "collection": "Bases",       "categorie": "primaire",     "niveau_scolaire": "CE2", "prix_achat": 1000, "prix_vente": 1700},
-    {"titre": "MON CAHIER D'ECRITURE CM1",    "auteur": "Collectif FABS-CI", "collection": "Bases",       "categorie": "primaire",     "niveau_scolaire": "CM1", "prix_achat": 1100, "prix_vente": 1800},
-    {"titre": "MON CAHIER D'ECRITURE CM2",    "auteur": "Collectif FABS-CI", "collection": "Bases",       "categorie": "primaire",     "niveau_scolaire": "CM2", "prix_achat": 1100, "prix_vente": 1800},
 
-    # --- Arts plastiques & Éducation musicale ---
-    {"titre": "MON CAHIER DE COURS D'ARTS PLASTIQUE",                                         "auteur": "Collectif FABS-CI", "collection": "Arts",     "categorie": "primaire",      "niveau_scolaire": "Primaire",        "prix_achat": 1500, "prix_vente": 2500},
-    {"titre": "MON CAHIER DE LEÇON D'EDUCATION MUSICALE",                                     "auteur": "Collectif FABS-CI", "collection": "Musique",  "categorie": "primaire",      "niveau_scolaire": "Primaire",        "prix_achat": 1500, "prix_vente": 2500},
-    {"titre": "MON CAHIER DE COURS ET D'ACTIVITÉS D'ÉDUCATION MUSICALE 6ème ancien",          "auteur": "Collectif FABS-CI", "collection": "Musique",  "categorie": "premier_cycle", "niveau_scolaire": "6ème",            "prix_achat": 1600, "prix_vente": 2700},
-    {"titre": "MON CAHIER DE COURS ET D'ACTIVITÉS D'ÉDUCATION MUSICALE 6ème NP",              "auteur": "Collectif FABS-CI", "collection": "Musique",  "categorie": "premier_cycle", "niveau_scolaire": "6ème",            "prix_achat": 1600, "prix_vente": 2700},
-    {"titre": "MON CAHIER DE COURS ET D'ACTIVITÉS D'ÉDUCATION MUSICALE 5ème",                 "auteur": "Collectif FABS-CI", "collection": "Musique",  "categorie": "premier_cycle", "niveau_scolaire": "5ème",            "prix_achat": 1600, "prix_vente": 2700},
-    {"titre": "MON CAHIER DE COURS ET D'ACTIVITÉS D'ÉDUCATION MUSICALE 4ème",                 "auteur": "Collectif FABS-CI", "collection": "Musique",  "categorie": "premier_cycle", "niveau_scolaire": "4ème",            "prix_achat": 1600, "prix_vente": 2700},
-    {"titre": "MON CAHIER DE COURS ET D'ACTIVITÉS D'ÉDUCATION MUSICALE 3ème",                 "auteur": "Collectif FABS-CI", "collection": "Musique",  "categorie": "premier_cycle", "niveau_scolaire": "3ème",            "prix_achat": 1600, "prix_vente": 2700},
-    {"titre": "MON CAHIER DE COURS ET D'ACTIVITÉS D'ÉDUCATION MUSICALE 2nde",                 "auteur": "Collectif FABS-CI", "collection": "Musique",  "categorie": "second_cycle",  "niveau_scolaire": "2nde",            "prix_achat": 1800, "prix_vente": 3000},
-    {"titre": "MON CAHIER DE COURS ET D'ACTIVITÉS D'ÉDUCATION MUSICALE 1ère",                 "auteur": "Collectif FABS-CI", "collection": "Musique",  "categorie": "second_cycle",  "niveau_scolaire": "1ère",            "prix_achat": 1800, "prix_vente": 3000},
-    {"titre": "MON CAHIER DE COURS DES ARTS PLASTIQUE 6e – 3e",                               "auteur": "Collectif FABS-CI", "collection": "Arts",     "categorie": "premier_cycle", "niveau_scolaire": "6ème-3ème",       "prix_achat": 1800, "prix_vente": 3000},
-
-    # --- Examens & révisions Primaire (CM1 / CEPE) ---
-    {"titre": "Réussir mes sujets de composition CM1",                                        "auteur": "Collectif FABS-CI", "collection": "Réussir",  "categorie": "primaire",      "niveau_scolaire": "CM1",             "prix_achat": 1500, "prix_vente": 2800},
-    {"titre": "Corrigé Réussir mes sujets de composition CM1",                                "auteur": "Collectif FABS-CI", "collection": "Réussir",  "categorie": "primaire",      "niveau_scolaire": "CM1",             "prix_achat": 1500, "prix_vente": 2800},
-    {"titre": "Réussir mes révisions CM1",                                                     "auteur": "Collectif FABS-CI", "collection": "Réussir",  "categorie": "primaire",      "niveau_scolaire": "CM1",             "prix_achat": 1500, "prix_vente": 2800},
-    {"titre": "Corrigé Réussir mes révisions CM1",                                             "auteur": "Collectif FABS-CI", "collection": "Réussir",  "categorie": "primaire",      "niveau_scolaire": "CM1",             "prix_achat": 1500, "prix_vente": 2800},
-    {"titre": "Réussir mes sujets types CEPE",                                                 "auteur": "Collectif FABS-CI", "collection": "Réussir",  "categorie": "primaire",      "niveau_scolaire": "CEPE",            "prix_achat": 1600, "prix_vente": 3000},
-    {"titre": "Corrigé Réussir mes sujets types CEPE",                                         "auteur": "Collectif FABS-CI", "collection": "Réussir",  "categorie": "primaire",      "niveau_scolaire": "CEPE",            "prix_achat": 1600, "prix_vente": 3000},
-    {"titre": "Réussir mon CEPE — Mes révisions",                                              "auteur": "Collectif FABS-CI", "collection": "Réussir",  "categorie": "primaire",      "niveau_scolaire": "CEPE",            "prix_achat": 1600, "prix_vente": 3000},
-    {"titre": "Corrigé Réussir mon CEPE — Mes révisions",                                      "auteur": "Collectif FABS-CI", "collection": "Réussir",  "categorie": "primaire",      "niveau_scolaire": "CEPE",            "prix_achat": 1600, "prix_vente": 3000},
-
-    # --- Mémos & Tests BEPC / BAC ---
-    {"titre": "MEMO BEPC MATHEMATIQUE",                                                        "auteur": "Pr A. Diallo",       "collection": "Mémos",    "categorie": "premier_cycle", "niveau_scolaire": "3ème",            "prix_achat": 1800, "prix_vente": 3200},
-    {"titre": "MEMO BAC MATHEMATIQUE",                                                          "auteur": "Pr A. Diallo",       "collection": "Mémos",    "categorie": "second_cycle",  "niveau_scolaire": "Terminale",       "prix_achat": 2200, "prix_vente": 3800},
-    {"titre": "TEST-BEPC Anglais",                                                              "auteur": "S. Konan",           "collection": "Tests",    "categorie": "premier_cycle", "niveau_scolaire": "3ème",            "prix_achat": 2000, "prix_vente": 3500},
-    {"titre": "TEST-BAC PHILOSOPHIE",                                                           "auteur": "M. B. Aké",          "collection": "Tests",    "categorie": "second_cycle",  "niveau_scolaire": "Terminale",       "prix_achat": 2200, "prix_vente": 3800},
-    {"titre": "TEST-BAC Anglais",                                                               "auteur": "S. Konan",           "collection": "Tests",    "categorie": "second_cycle",  "niveau_scolaire": "Terminale",       "prix_achat": 2200, "prix_vente": 3800},
-    {"titre": "L'EPREUVE D'ORAL D'ANGLAIS — Préparation BAC/BEPC",                               "auteur": "S. Konan",           "collection": "Languages","categorie": "second_cycle",  "niveau_scolaire": "Lycée",           "prix_achat": 2500, "prix_vente": 4000},
-
-    # --- Renforcement Philo Lycée ---
-    {"titre": "MON CAHIER DE RENFORCEMENT DE MES CAPACITES PHILO 1RE",                          "auteur": "M. B. Aké",          "collection": "Renforce", "categorie": "second_cycle",  "niveau_scolaire": "1ère",            "prix_achat": 2500, "prix_vente": 4500},
-    {"titre": "MON CAHIER DE RENFORCEMENT DE MES CAPACITES PHILO TLE",                          "auteur": "M. B. Aké",          "collection": "Renforce", "categorie": "second_cycle",  "niveau_scolaire": "Terminale",       "prix_achat": 2500, "prix_vente": 4500},
+async def seed_real_products(db: AsyncIOMotorDatabase, owner_user_id: str) -> int:
+    """Les produits sont déjà seeded via script externe"""
+    return 0
