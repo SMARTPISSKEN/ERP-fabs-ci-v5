@@ -1,0 +1,46 @@
+{
+  "summary": "Sprint 3 (Dashboard) backend testing for EDITIONS FABS-CI ERP. 23 new tests added covering /api/dashboard/stats across all 8 roles + Sprint 1 regression. 48/48 tests pass (23 dashboard + 25 sprint 1). Treasury alert, role-aware KPIs, chart visibility matrix, and sort order all verified. DG seed user role preserved (not mutated).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_dashboard_fabsci.py",
+    "/app/backend/tests/test_auth_fabsci.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "dashboard_data.py is clean and well-structured — single source of truth for mocked KPIs/charts/treasury. Easy to swap with real DB queries in sprints 4-8.",
+    "build_dashboard_payload returns a list of KPI dicts that share object identity with the module-level _ALL_KPIS. Safe today because the endpoint never mutates them, but a defensive copy.deepcopy() (or returning a fresh list of dicts) would prevent accidental mutation when real data is layered in (e.g., per-user variation_pct).",
+    "FACTURES_A_RELANCER is sorted at request time on every call (sorted() is O(n log n)). For 7 rows it's negligible, but consider sorting once at module import — or storing the list pre-sorted — when this becomes real data.",
+    "ROLE_KPIS default fallback ['commandes_en_cours'] silently masks an unknown role. Recommend raising HTTPException(400, 'Rôle inconnu') instead to fail fast.",
+    "from dashboard_data import build_dashboard_payload is placed mid-file (line 327). Move to the top imports block for PEP8 cleanliness; current noqa is functional but stylistically off.",
+    "is_demo_data boolean is hard-coded True. Good — explicit demo flag that the frontend can use to show a 'demo' watermark until real CRUD lands.",
+    "No pagination/caching on /api/dashboard/stats. With mocked data this is fine; with real aggregations consider Mongo $facet + a 30-60s in-memory TTL cache."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_dashboard_fabsci.py (new)"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "N/A (backend-only request)"},
+  "test_credentials": "Re-used /app/memory/test_credentials.md tokens. For 6 non-seeded roles (comptable, directeur_commercial, gestionnaire_stock, responsable_magasinier, secretariat, service_logistique) the test fixture creates throwaway users + sessions in MongoDB and cleans them up via fixture teardown (verified — no test_token_* entries remain after run).",
+  "seed_data_creation": "Temporary per-role test users/sessions created and cleaned up by the role_tokens module-scoped fixture. DG user role verified post-run: still 'directeur_general' (TestFinalState::test_dg_role_unchanged green).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Sprint 3 fully green. /api/dashboard/stats is mocked (hardcoded in dashboard_data.py) per request. Test file test_dashboard_fabsci.py parametrizes all 8 roles; if Sprint 4+ changes ROLE_KPIS / charts visibility / treasury thresholds, update ROLE_EXPECTATIONS dict at top of the test file. The role_tokens fixture is module-scoped so creating new role tests is just adding a parametrize entry. BASE_URL is read from frontend/.env as fallback when REACT_APP_BACKEND_URL isn't exported into the shell.",
+  "verification_details": {
+    "tests_passed": 48,
+    "tests_failed": 0,
+    "sprint_3_tests": 23,
+    "sprint_1_regression_tests": 25,
+    "roles_tested": ["super_admin", "directeur_general", "comptable", "directeur_commercial", "gestionnaire_stock", "responsable_magasinier", "secretariat", "service_logistique"],
+    "treasury_sort_verified": "[62, 45, 31, 22, 18, 12, 8] DESC",
+    "depasse_flag": "True (7,800,000 >= 5,000,000)",
+    "dg_role_post_run": "directeur_general (unchanged)"
+  }
+}

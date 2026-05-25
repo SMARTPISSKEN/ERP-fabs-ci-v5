@@ -1,0 +1,54 @@
+{
+  "summary": "Sprints 8-15 backend verification PASSED (32/32 tests). Critical FRONTEND blocker: App.js was never updated — it still contains the default Hello World template with zero routes registered, so none of the new (or existing) pages are reachable.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "/app/frontend/src/App.js",
+        "issue": "File is the default CRA Hello World template (mtime May 22, untouched). No <Routes>, no <Route> entries for /login, /dashboard, /paiements, /paiements/:id, /stock, /livraisons, /retours, /comptabilite, /utilisateurs, /parametres, /clients, /produits, /commandes, /factures. React Router emits 'No routes matched location \"/paiements\"' and '/login'. The entire SPA is non-navigable.",
+        "selector": "n/a",
+        "priority": "CRITICAL"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Navigation to any page (including /login)",
+        "issue": "Body renders only 'Made with Emergent' badge — the React tree only contains <Home /> + outer <BrowserRouter>. Every page file (Paiements.jsx, Stock.jsx, BonsLivraison.jsx, BonsRetour.jsx, Comptabilite.jsx, Utilisateurs.jsx, Parametres.jsx, Login.jsx, Dashboard.jsx, Clients.jsx, Produits.jsx, Commandes.jsx, Factures.jsx, AuthCallback.jsx, NotFound.jsx) is orphan code — never imported.",
+        "affected_selectors": ["[data-testid=\"login-card\"]", "[data-testid=\"login-google-btn\"]"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_sprints_8_15_fabsci.py",
+    "/app/test_reports/pytest/pytest_sprints_8_15.xml"
+  ],
+  "action_items": [
+    "[CRITICAL] Rewrite /app/frontend/src/App.js to wire up BrowserRouter with all routes: /login, /auth/callback, /dashboard, /clients, /clients/:id, /produits, /produits/:id, /commandes, /commandes/:id, /factures, /factures/:id, /paiements, /paiements/:id, /stock, /livraisons, /retours, /comptabilite, /utilisateurs, /parametres, and a 404 catch-all (NotFound.jsx). Wrap protected routes in an auth guard that reads useAuth() (already used by Login.jsx).",
+    "After fixing App.js, retest the routes end-to-end (still cannot test Google OAuth headless, but every page must render its shell or redirect to /login)."
+  ],
+  "critical_code_review_comments": [
+    "BLOCKER: frontend/src/App.js is the unmodified template. The main agent claimed 'All routes registered' in files_of_reference, but the file was never edited. Page components exist on disk but are dead code until App.js imports and routes them.",
+    "BACKEND is clean: 42 routes registered, all list endpoints correctly enforce 401, seed counts match (8 clients, 35 produits, 3 commandes, 1 facture, 1 paiement, 9 paramètres), super_admin pissken seeded with role=super_admin, stock_module.TypeMouvement Literal contains 'specimen_gratuit' (Sprint 14 rule).",
+    "recherche_module.py: handler signature has `request: Request = None` after `q: str = Query(...)`. Works in FastAPI because Request is detected by type, but mixing default-None with non-default-preceded params is fragile — prefer `request: Request, q: str = Query(...)`.",
+    "stock_module.py treats 'sortie', 'ajustement', and 'specimen_gratuit' identically (max(0, stock - qty)). 'ajustement' should allow both signed directions (set absolute or +/- delta) per accounting convention — currently only decrements. Consider an explicit ajustement payload with signed delta.",
+    "server.py: 11 collection-index create_index() calls run inside startup AFTER seeding, but a few seed_* helpers (e.g. seed_mouvements_stock) create their own indexes too. Functionally OK (idempotent) but duplicates ownership — choose one place.",
+    "Backend uses session_token cookie with samesite='none'; secure='true'. In production behind ingress this is fine. For local curl/pytest, Authorization: Bearer header path works (tested)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_sprints_8_15_fabsci.py (new — 32 tests, all green)"
+  ],
+  "success_rate": {
+    "backend": "100% (32/32 Sprint 8-15 tests passing)",
+    "frontend": "0% — App.js not wired, no routes reachable"
+  },
+  "test_credentials": "Used /app/memory/test_credentials.md (currently empty). Bypassed Google OAuth by inserting a synthetic session_token row in db.user_sessions for the seeded super_admin pissken@editionsfabsci.com (user_id from db.users). Token is auto-cleaned after the test module.",
+  "seed_data_creation": "No new seed. Existing seeds verified: users(2 super_admin+dg), clients(8), produits(35), commandes(3), factures(1), paiements(1), parametres(9). Synthetic super_admin session created/destroyed inside the fixture (module scope).",
+  "retest_needed": true,
+  "main_agent_can_self_test": false,
+  "context_for_next_testing_agent": "Backend Sprints 8-15 fully green via tests/test_sprints_8_15_fabsci.py (use Authorization: Bearer <token> with a manually inserted db.user_sessions row to bypass Google OAuth — see super_admin_token fixture). The 4 prior tests (auth/clients/dashboard/products) remain valid. FRONTEND: do NOT attempt UI testing until App.js is rebuilt with BrowserRouter wiring all page files. Once fixed, sanity-test by loading /login (expect FABS-CI login card with data-testid='login-card') and /paiements (expect redirect to /login).",
+  "rca of the issue": "Root cause: when the backend was restored from the corrupted Hello World template, the frontend App.js was left at its CRA default. Page components (Paiements.jsx, Stock.jsx, BonsLivraison.jsx, BonsRetour.jsx, Comptabilite.jsx, Utilisateurs.jsx, Parametres.jsx) were created and the agent likely assumed routes were already in App.js — but App.js still imports only <Home /> with a single index route. Reproduction: GET http://localhost:3000/login -> body=\"Made with Emergent\", console warns 'No routes matched location \"/login\"'. Mitigation: replace App.js content with a BrowserRouter that imports each page from ./pages/* and an AuthGuard wrapper that checks useAuth() for protected routes; keep DashboardLayout as the parent <Route> for in-app pages. Do NOT modify .env or backend — backend is healthy."
+}

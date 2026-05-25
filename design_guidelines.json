@@ -1,0 +1,94 @@
+{
+  "project_context": {
+    "name": "EDITIONS FABS-CI ERP",
+    "domain": "Ivorian publishing house",
+    "location": "Bingerville",
+    "dg": "ALI MAMIN",
+    "slogan": "Les livres sont des fenêtres par lesquelles on regarde le monde",
+    "school_year": "2026-2027",
+    "currency": "FCFA",
+    "language": "French",
+    "type": "hybrid_fullstack (B2B ERP)"
+  },
+  "design_system": {
+    "theme": "light",
+    "archetype": "Archetype 4 (Swiss & High-Contrast)",
+    "vibe": "Professional, premium, trustworthy, structured. NOT playful or marketing-y.",
+    "colors": {
+      "primary_navy": "#0A2540",
+      "accent_orange": "#FF6200",
+      "danger_red": "#C62828",
+      "success_green": "#2E7D32",
+      "background_light": "#F5F5F5",
+      "surface_white": "#FFFFFF"
+    },
+    "typography": {
+      "heading_font": "Manrope",
+      "body_font": "IBM Plex Sans",
+      "h1": "text-3xl font-bold tracking-tight text-[#0A2540]",
+      "h2": "text-xl font-bold tracking-tight text-[#0A2540]",
+      "body": "text-sm text-gray-700"
+    }
+  },
+  "logos": {
+    "description": "5 rounded squares arranged asymmetrically + text EDITIONS FABS-CI.",
+    "svg_light_bg": "<svg viewBox=\"0 0 250 50\" xmlns=\"http://www.w3.org/2000/svg\" className=\"w-full h-full\"><g transform=\"translate(0, 5)\"><rect x=\"0\" y=\"0\" width=\"12\" height=\"12\" rx=\"3\" fill=\"#0A2540\"/><rect x=\"16\" y=\"0\" width=\"12\" height=\"12\" rx=\"3\" fill=\"#FF6200\"/><rect x=\"32\" y=\"0\" width=\"12\" height=\"12\" rx=\"3\" fill=\"#2E7D32\"/><rect x=\"8\" y=\"16\" width=\"12\" height=\"12\" rx=\"3\" fill=\"#C62828\"/><rect x=\"24\" y=\"16\" width=\"12\" height=\"12\" rx=\"3\" fill=\"#F5F5F5\" stroke=\"#0A2540\" strokeWidth=\"2\"/></g><text x=\"60\" y=\"28\" fontFamily=\"Manrope, sans-serif\" fontSize=\"22\" fontWeight=\"800\" fill=\"#0A2540\" letterSpacing=\"-0.5\">EDITIONS FABS-CI</text></svg>",
+    "svg_dark_bg": "<svg viewBox=\"0 0 250 50\" xmlns=\"http://www.w3.org/2000/svg\" className=\"w-full h-full\"><g transform=\"translate(0, 5)\"><rect x=\"0\" y=\"0\" width=\"12\" height=\"12\" rx=\"3\" fill=\"#FFFFFF\"/><rect x=\"16\" y=\"0\" width=\"12\" height=\"12\" rx=\"3\" fill=\"#FF6200\"/><rect x=\"32\" y=\"0\" width=\"12\" height=\"12\" rx=\"3\" fill=\"#2E7D32\"/><rect x=\"8\" y=\"16\" width=\"12\" height=\"12\" rx=\"3\" fill=\"#C62828\"/><rect x=\"24\" y=\"16\" width=\"12\" height=\"12\" rx=\"3\" fill=\"transparent\" stroke=\"#FFFFFF\" strokeWidth=\"2\"/></g><text x=\"60\" y=\"28\" fontFamily=\"Manrope, sans-serif\" fontSize=\"22\" fontWeight=\"800\" fill=\"#FFFFFF\" letterSpacing=\"-0.5\">EDITIONS FABS-CI</text></svg>"
+  },
+  "pages": {
+    "login": {
+      "layout": "Flex center, full screen",
+      "background": "bg-gradient-to-br from-[#0A2540] to-[#040f1a]",
+      "card": "bg-white shadow-xl rounded-2xl p-10 max-w-md w-full mx-auto relative z-10",
+      "logo_usage": "Use svg_light_bg centered inside the white card at the top",
+      "cta": "Emergent Google Auth Button. bg-[#FF6200] hover:bg-[#E65800] text-white w-full py-2.5 rounded-lg flex justify-center items-center gap-2",
+      "slogan": "Text: 'Les livres sont des fenêtres par lesquelles on regarde le monde'. Placement: Absolute bottom of the screen (outside card), text-[#F5F5F5]/60, text-sm, centered."
+    },
+    "dashboard": {
+      "layout": "Sidebar (left) + Topbar (top right) + Content (bottom right)",
+      "sidebar": {
+        "style": "w-64 fixed h-screen bg-[#0A2540] text-white flex flex-col",
+        "logo_usage": "Use svg_dark_bg at the top of the sidebar",
+        "navigation": [
+          "Tableau de bord (Active)",
+          "Commandes",
+          "Factures",
+          "Bons de Livraison",
+          "Bons de Retour",
+          "Règlements",
+          "Stock",
+          "Clients",
+          "Utilisateurs"
+        ]
+      },
+      "topbar": {
+        "style": "h-16 bg-white border-b border-gray-200 ml-64 px-6 flex items-center justify-between",
+        "content": "School year (2026-2027) badge, User profile menu (DG: ALI MAMIN placeholder), Logout button"
+      },
+      "content": {
+        "style": "ml-64 pt-16 min-h-screen bg-[#F5F5F5] p-8",
+        "kpi_cards": "Placeholders. bg-white rounded-lg border border-gray-200 p-6 shadow-sm"
+      }
+    }
+  },
+  "data_models": {
+    "roles": [
+      "super_admin",
+      "directeur_general",
+      "comptable",
+      "directeur_commercial",
+      "gestionnaire_stock",
+      "responsable_magasinier",
+      "secretariat",
+      "service_logistique"
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Install required fonts (Manrope, IBM Plex Sans) via next/font or standard imports.",
+    "Implement EXACT hex codes provided. DO NOT alter the primary/accent colors.",
+    "Build the UI entirely in French.",
+    "Use 'FCFA' as the currency suffix in any financial placeholder data.",
+    "Use Shadcn UI for the dashboard components (cards, dropdowns) but style them to fit the strict B2B theme.",
+    "Ensure all interactive elements and major containers have a `data-testid` attribute (e.g., data-testid='login-google-btn')."
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "summary": "Iteration 7 — PDF action buttons (Aperçu/Imprimer/PDF/WhatsApp) and new CommandeForm fields verified end-to-end. Backend: 6/6 pytest passing (new fields persistence on POST + PATCH, Commande PDF, Facture PDF, BL PDF all return application/pdf with %PDF magic, AND the critical workflow Commande→Facture auto-generation now works again — auto-generated facture contains its lignes, confirming the misplaced @router.get decorator bug is fixed). Frontend: login OK; CommandeDetail shows 4 PDF buttons (btn-apercu-pdf, btn-imprimer-pdf, btn-telecharger-pdf, btn-partager-whatsapp); FactureDetail shows the same 4 buttons; /livraisons shows the 4 action icons per row (Eye, Printer, Download, Share2). WhatsApp button opens wa.me (redirects to api.whatsapp.com/send/) with the proper French message (EDITIONS FABS-CI / Commande : FABS-CMD-26-27-0001 / Client : Librairie de France / Montant). CommandeForm Step 3 includes the 5 new fields: input-representant, input-numero-commande-client, textarea-adresse-facturation, textarea-adresse-expedition, textarea-notes-privees. Currency check: only FCFA present in /commandes view; no $ symbol detected.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_pdf_actions_iter7.py",
+    "/app/test_reports/pytest/pytest_iter7_pdf.xml"
+  ],
+  "action_items": [
+    "[INFO ONLY] The review_request referenced URL /bons-livraison but the real route is /livraisons (App.js line 59). The page itself works correctly — just a doc discrepancy in the test request.",
+    "[INFO ONLY] WhatsApp's wa.me URL automatically redirects to api.whatsapp.com/send/ in headless browsers (this is WhatsApp behavior, not a bug). The encoded text payload was verified to contain EDITIONS FABS-CI, reference, client, montant."
+  ],
+  "critical_code_review_comments": [
+    "commandes_module.py: the PDF endpoint @router.get('/{commande_id}/pdf') is now correctly INSIDE build_commandes_router (line 579, before `return router` at 615). The previously misplaced version inside _auto_generate_facture_from_commande is gone — confirmed by test_validate_commande_auto_generates_facture which checks the auto-generated facture also has its lignes (the misplaced decorator had silently aborted line creation).",
+    "Pydantic models CommandeIn/CommandePatch/CommandeOut/CommandeDetail all consistently include the 5 new fields with proper max_length validation (representant 120, addresses 500, num_cmd_client 100, notes_privees 1000).",
+    "pdfActions.js correctly fetches PDF as blob with Bearer auth, then uses blob URL for print/download/preview — this is the right pattern for auth-protected PDF endpoints.",
+    "BonsLivraison.jsx uses dynamic data-testid={`btn-apercu-${bl.reference}`} (and similar) — testable per-row. The existing 'Marquer livré' button is conditional on statut!='livre' (line 167), which is correct."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_pdf_actions_iter7.py (new pytest file, 6 tests, all pass)"
+  ],
+  "success_rate": {
+    "backend": "100% (6/6)",
+    "frontend": "100% — all 4 PDF buttons present on CommandeDetail, FactureDetail, and BL list; CommandeForm Step 3 has all 5 new fields; WhatsApp share works; FCFA-only currency confirmed"
+  },
+  "test_credentials": "pissken@editionsfabsci.com / Admin@2025 (from /app/memory/test_credentials.md) — works against /api/auth/login returning access_token.",
+  "seed_data_creation": "Created 2 TEST_ commandes (one draft to verify field persistence + PATCH, one en_attente that was validated to verify auto-facture flow). One TEST_ facture auto-generated. All flagged with TEST_ prefix in representant/adresse fields. No cleanup performed (kept for verification by main agent if needed).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "The PDF action infrastructure is complete and verified. Routes: /commandes (list) -> /commandes/:id (detail with 4 PDF buttons), /factures -> /factures/:id (same 4 buttons), /livraisons (NOT /bons-livraison — that's a 404; per-row action icons). Backend pytest file /app/backend/tests/test_pdf_actions_iter7.py covers all 6 critical paths and is regression-ready. The auto-facture-on-validation flow was previously broken because the @router.get('/{commande_id}/pdf') decorator was misplaced INSIDE _auto_generate_facture_from_commande; this is now fixed (decorator correctly placed inside build_commandes_router) and the regression test asserts the generated facture has lignes.",
+  "rca of the issue": "Previous critical bug RCA: A misplaced @router.get('/{commande_id}/pdf') decorator inside _auto_generate_facture_from_commande caused all code after the decorator (including db.facture_lignes.insert_one calls) to be unreachable as a route handler short-circuited. The new pytest test_validate_commande_auto_generates_facture validates the fix by asserting auto-generated factures have len(lignes) >= 1. Reproduction: POST /api/commandes?submit=true -> POST /api/commandes/{id}/valider -> GET /api/factures?limit=200 (find facture with commande_id == id) -> GET /api/factures/{fid} -> assert lignes exist. All steps pass post-fix."
+}

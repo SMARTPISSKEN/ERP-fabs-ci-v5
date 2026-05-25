@@ -1,0 +1,40 @@
+{
+  "summary": "Sprint 0+1 backend testing for EDITIONS FABS-CI ERP. 25/25 pytest tests passed covering health, auth (cookie+Bearer), seed idempotency, RBAC, expired sessions, inactive accounts, logout, CORS, and MongoDB _id projection. Seed verified idempotent after backend restart.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/auth/session", "issue": "Sending body without 'session_id' key returns 422 (Pydantic) rather than the documented 400. Empty-string session_id correctly returns 400. Minor — both are 4xx; consider customizing the validation handler if a 400 is contractually required."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_auth_fabsci.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "(Optional) Convert FastAPI's default 422 to 400 for missing 'session_id' on /api/auth/session to fully match the documented contract."
+  ],
+  "critical_code_review_comments": [
+    "server.py is ~345 lines — clean, single-file is acceptable for Sprint 0/1 but split into routers/auth, routers/profiles, models/, db/ before features pile up.",
+    "All MongoDB reads use `{\"_id\": 0}` projection — verified no _id leakage on any auth/profiles response.",
+    "CORS uses allow_origin_regex='.*' + allow_credentials=True. The K8s ingress already rewrites ACAO to '*' which is fine for the current Bearer-token path; comment in code already explains this.",
+    "user_sessions index is unique on session_token + TTL index on expires_at — good. Consider adding `expireAfterSeconds: 0` on the expires_at index so MongoDB auto-purges expired sessions instead of relying on the 401-on-read check.",
+    "auth_session() stores Emergent's session_token verbatim; if Emergent ever returns the same token to two users (very unlikely) the unique index would 500 the request. Wrap the insert in try/except DuplicateKeyError -> upsert.",
+    "datetime fields stored as ISO strings — works but loses native date queries. Consider storing as BSON Date for indexing/TTL.",
+    "No rate limiting on /api/auth/session — abuse could brute-force Emergent. Add slowapi or rely on ingress."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_auth_fabsci.py",
+    "/app/memory/test_credentials.md"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "N/A (backend-only request)"},
+  "test_credentials": "Documented in /app/memory/test_credentials.md. Tokens test_super_admin_valid_token (super_admin) and test_dg_valid_token (directeur_general) persist in MongoDB for 7 days.",
+  "seed_data_creation": "Inserted 3 sessions in user_sessions: test_super_admin_valid_token, test_dg_valid_token, test_expired_token. Pre-seeded users auto-created by backend startup hook (2 documents).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend Sprint 0+1 fully green. Re-use tokens from /app/memory/test_credentials.md. If tokens are missing, recreate via the mongosh snippet in that file. Real Emergent Google session_id cannot be tested programmatically — only the rejection paths (missing/empty/invalid) are covered. /api/auth/session happy path requires manual UI testing through Emergent OAuth redirect. The 422 vs 400 discrepancy on missing session_id is the only minor finding — test accepts both."
+}

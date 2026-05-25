@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API FABS-CI</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; }
+        button { background: #FF6200; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #E55900; }
+        .result { margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px; white-space: pre-wrap; font-family: monospace; font-size: 12px; }
+        .success { border-left: 4px solid #2E7D32; }
+        .error { border-left: 4px solid #C62828; }
+        input { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 4px; }
+        label { font-weight: bold; display: block; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Connexion API FABS-CI</h1>
+        <p>Testez la connexion au backend depuis votre navigateur</p>
+        
+        <label>Email:</label>
+        <input type="email" id="email" value="pissken@editionsfabsci.com">
+        
+        <label>Mot de passe:</label>
+        <input type="password" id="password" value="Admin@2025">
+        
+        <br><br>
+        <button onclick="testLogin()">🔐 Tester la Connexion</button>
+        <button onclick="testHealth()" style="background: #0A2540;">🏥 Tester /api/health</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function testHealth() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '⏳ Test en cours...';
+            
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `✅ SUCCÈS\n\nURL: ${window.location.origin}/api/health\nStatus: ${response.status}\n\nRéponse:\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ ERREUR\n\n${error.message}\n\nLe backend n'est pas accessible via /api`;
+            }
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('result');
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            resultDiv.innerHTML = '⏳ Tentative de connexion...';
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `✅ CONNEXION RÉUSSIE\n\nURL: ${window.location.origin}/api/auth/login\nStatus: ${response.status}\n\nUtilisateur:\nEmail: ${data.user.email}\nNom: ${data.user.nom_complet}\nRôle: ${data.user.role}\n\nToken reçu: ${data.access_token.substring(0, 50)}...`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `❌ ÉCHEC CONNEXION\n\nStatus: ${response.status}\n\nRéponse:\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ ERREUR RÉSEAU\n\n${error.message}\n\nLe backend n'est pas accessible.\n\nVérifiez que:\n1. Vous utilisez l'URL Emergent (pas localhost)\n2. Le backend est en cours d'exécution\n3. Le routage /api est configuré`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+{
+  "summary": "Sprint 4 (Module Clients) backend testing for EDITIONS FABS-CI ERP. 25 new tests added covering seed, RBAC (read+write roles), full CRUD, intelligent duplicate detection (Levenshtein + phone last-8), soft delete (idempotent), sequential reference generation FABS-CLI-XXXX, MongoDB unique indexes. Full regression — 73/73 tests pass (25 auth + 23 dashboard + 25 clients). Seed verified idempotent (still exactly 1 doc per ref 0001-0008). DG role intact post-run. Test-created clients soft-disabled at teardown (16 disabled, 8 active seeds, counter at 24 — expected, persists across runs per agent note).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/clients (no auth)", "issue": "When body is invalid (e.g. nom='X' fails min_length=2), Pydantic 422 fires BEFORE auth dependency, so unauthenticated callers with malformed bodies get 422 instead of 401. Cosmetic — valid-payload requests do return 401 correctly. Common FastAPI behaviour. Fix would require moving auth into a Depends() positional before the Pydantic body model or using a custom dependency that runs first."}
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_clients_fabsci.py",
+    "/app/backend/tests/test_dashboard_fabsci.py",
+    "/app/backend/tests/test_auth_fabsci.py",
+    "/app/test_reports/pytest/pytest_results.xml",
+    "/app/test_reports/pytest/pytest_clients.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "clients_module.py — _scan_duplicates does a full collection scan (find({actif:True})) on every create / check-duplicates / forced create. Fine for <1k clients (mentioned in TODO comment) but will degrade. Recommend a precomputed normalized_name + last8phone field with compound index, or move to Atlas Search ($search.text + autocomplete) before the collection grows beyond ~5k docs.",
+    "clients_module.py:46 — _NAME_NOISE regex contains duplicate 'college|college' (and a missing accent for 'collège'). The accent is stripped before regex applies, so it's not a runtime bug, but the duplicate is dead code — clean up for readability.",
+    "clients_module.py:343 — _now_iso() is called twice for created_at/updated_at. Minor perf nit: store once. (insert_one then return doc — also: returning ClientOut from doc dict means client_id duplicated in dict + uuid is OK, but the dict mutation pattern (`doc = {...}; await insert; return ClientOut(**_project_client(doc))`) is fragile if Motor adds _id to the dict via insert_one in future versions; safer to `await insert; doc.pop('_id', None); return`.",
+    "clients_module.py:103 next_client_reference — find_one_and_update with upsert=True and return_document=True (default After when imported as motor's ReturnDocument.AFTER); confirmed seq increments atomically. ✅ But `doc['seq'] if doc else 1` fallback is unreachable because upsert always returns the doc — can be simplified to `doc['seq']`.",
+    "server.py:152 startup — clients indexes are created on every startup (idempotent via Mongo). However the text index `[('nom','text'),('telephone','text'),('reference','text')]` is created but never used (list_clients uses $regex on each field). Either use $text or drop the text index to save storage.",
+    "clients_module.py:271 — ville filter uses regex ^prefix which won't match across casing because re.escape only escapes meta-chars. The $options:'i' handles it ✅, but you'll miss accent variants (Bouaké vs Bouake). Consider storing a normalized ville_norm field.",
+    "RBAC: create_client (line 326) gates by WRITE_ROLES correctly. Same gating on PATCH and DELETE — good. ✅",
+    "Soft-delete is correctly idempotent (no 404 on already-disabled) but `find_one_and_update` will still set updated_at on no-op deletes; consider checking `if doc['actif'] is False: return doc` to avoid unnecessary writes.",
+    "Pydantic schema: telephone has max_length=40 only, no format/regex. Two seeds use different separators ('+225 27 …' vs '+225 07 …'). normalize_phone handles all whitespace, so duplicate detection is robust ✅, but for display/UX consider normalizing on write.",
+    "ClientPatch (line 134) — partial update treats explicit `null` same as 'not provided' (updates dict drops None values). This means clients cannot clear an optional field (e.g. set email back to null). Acceptable for MVP; flag for future."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_clients_fabsci.py (new — 25 tests)"
+  ],
+  "success_rate": {"backend": "100% (73/73)", "frontend": "N/A (backend-only request)"},
+  "test_credentials": "Re-used /app/memory/test_credentials.md tokens (super_admin + DG). For 6 non-seeded roles (comptable, directeur_commercial, gestionnaire_stock, responsable_magasinier, secretariat, service_logistique) the role_tokens module-scoped fixture creates throwaway users + sessions and cleans them up via teardown. Verified: DG role unchanged post-run (still 'directeur_general').",
+  "seed_data_creation": "Test-created clients (TEST_ prefix) are soft-disabled at teardown (respect soft-delete invariant). After run: 24 total clients (8 active seeds + 16 disabled test clients). Counter at seq=24. Per agent context note this persistence is expected — next testing agent will see refs FABS-CLI-0025+ on new creates.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Sprint 4 fully green. /api/clients backed by real MongoDB. Reference counter at seq=24 (persists). 8 active seeded clients (refs 0001-0008) + 16 soft-disabled test-created clients in the DB. If new tests need to assert exact total active count, use `?actif=true` not unfiltered. The TestSoftDelete class verifies actif=true filter excludes disabled, actif=false includes them. role_tokens fixture pattern in test_clients_fabsci.py mirrors test_dashboard_fabsci.py — copy for future sprints. Note: POST /api/clients returns 422 (not 401) when both body is invalid AND auth is missing — Pydantic validates before auth dep. Tests now use a valid payload for the no-auth case.",
+  "verification_details": {
+    "tests_passed": 73,
+    "tests_failed": 0,
+    "sprint_4_tests": 25,
+    "sprint_3_tests": 23,
+    "sprint_1_tests": 25,
+    "seed_count": 8,
+    "seed_refs": "FABS-CLI-0001 .. FABS-CLI-0008",
+    "counter_after_run": 24,
+    "active_clients_after_run": 8,
+    "disabled_clients_after_run": 16,
+    "dg_role_post_run": "directeur_general (unchanged)",
+    "indexes_verified": ["clients.client_id (unique)", "clients.reference (unique)", "clients text index"],
+    "duplicate_detection_verified": ["phone last-8 match", "Levenshtein name similarity >=0.78", "?force=true bypass", "exclude_id excludes self"]
+  }
+}
