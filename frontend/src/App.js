@@ -22,6 +22,7 @@ import BonsRetour from "./pages/BonsRetour";
 import Comptabilite from "./pages/Comptabilite";
 import Utilisateurs from "./pages/Utilisateurs";
 import Parametres from "./pages/Parametres";
+import Documents from "./pages/Documents";
 import NotFound from "./pages/NotFound";
 
 function App() {
@@ -191,6 +192,16 @@ function App() {
               element={
                 <ProtectedRoute moduleKey="parametres">
                   <Parametres />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Documents AI */}
+            <Route
+              path="/documents"
+              element={
+                <ProtectedRoute>
+                  <Documents />
                 </ProtectedRoute>
               }
             />
