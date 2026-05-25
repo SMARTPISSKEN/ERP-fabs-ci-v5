@@ -23,6 +23,7 @@ import Comptabilite from "./pages/Comptabilite";
 import Utilisateurs from "./pages/Utilisateurs";
 import Parametres from "./pages/Parametres";
 import Documents from "./pages/Documents";
+import DocumentDetail from "./pages/DocumentDetail";
 import NotFound from "./pages/NotFound";
 
 function App() {
@@ -202,6 +203,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Documents />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/documents/:id"
+              element={
+                <ProtectedRoute>
+                  <DocumentDetail />
                 </ProtectedRoute>
               }
             />
