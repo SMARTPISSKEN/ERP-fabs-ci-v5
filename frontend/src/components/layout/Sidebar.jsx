@@ -10,6 +10,7 @@ import {
   RotateCcw,
   Package,
   Calculator,
+  BarChart3,
   UserCog,
   Settings,
   X,
@@ -21,7 +22,7 @@ import { useAuth } from "../../hooks/useAuth";
 
 const ICONS = {
   LayoutDashboard, Users, BookOpen, ShoppingCart, FileText, CreditCard,
-  Truck, RotateCcw, Package, Calculator, UserCog, Settings,
+  Truck, RotateCcw, Package, Calculator, BarChart3, UserCog, Settings,
 };
 
 export default function Sidebar({ mobileOpen = false, onMobileClose }) {

@@ -12,6 +12,7 @@ export const MODULES = [
   { key: "retours",       path: "/retours",       label: "Retours",         icon: "RotateCcw" },
   { key: "stock",         path: "/stock",         label: "Stock",           icon: "Package" },
   { key: "comptabilite",  path: "/comptabilite",  label: "Comptabilité",    icon: "Calculator" },
+  { key: "rapports",      path: "/rapports",      label: "Rapports",        icon: "BarChart3" },
   { key: "utilisateurs",  path: "/utilisateurs",  label: "Utilisateurs",    icon: "UserCog" },
   { key: "parametres",    path: "/parametres",    label: "Paramètres",      icon: "Settings" },
 ];
