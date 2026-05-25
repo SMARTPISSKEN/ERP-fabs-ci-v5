@@ -18,6 +18,7 @@ import { Separator } from '../ui/separator';
 import { Badge } from '../ui/badge';
 import { toast } from 'sonner';
 import DashboardLayout from '../layout/DashboardLayout';
+import ClientPicker from './ClientPicker';
 
 export default function CommandeForm() {
   const navigate = useNavigate();
@@ -225,47 +226,42 @@ export default function CommandeForm() {
         <Card>
           <CardHeader>
             <CardTitle>Sélection du client</CardTitle>
-            <CardDescription>Choisissez le client pour cette commande</CardDescription>
+            <CardDescription>Recherchez un client existant ou créez-en un nouveau</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="client">Client *</Label>
-              <Select
-                value={formData.client_id}
-                onValueChange={handleClientSelect}
-              >
-                <SelectTrigger id="client" data-testid="select-client">
-                  <SelectValue placeholder="Sélectionnez un client" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.isArray(clients) && clients.map((client) => (
-                    <SelectItem key={client.client_id} value={client.client_id}>
-                      <div>
-                        <div className="font-medium">{client.nom}</div>
-                        <div className="text-sm text-gray-500">{client.reference}</div>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <ClientPicker
+              clients={clients}
+              selectedClient={selectedClient}
+              onSelect={handleClientSelect}
+              onClientCreated={(c) => setClients((prev) => [c, ...prev])}
+            />
 
             {selectedClient && (
-              <Card className="bg-blue-50 dark:bg-blue-900/20">
+              <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200">
                 <CardContent className="pt-6">
-                  <h4 className="font-semibold mb-2">Informations client</h4>
+                  <h4 className="font-semibold mb-2 text-[#0A2540] dark:text-blue-200">
+                    ✓ Client sélectionné
+                  </h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
-                      <span className="text-gray-600 dark:text-gray-400">Type:</span>{' '}
+                      <span className="text-gray-600 dark:text-gray-400">Nom :</span>{' '}
+                      <span className="font-medium">{selectedClient.nom}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600 dark:text-gray-400">Type :</span>{' '}
                       <Badge>{selectedClient.type_client}</Badge>
                     </div>
                     <div>
-                      <span className="text-gray-600 dark:text-gray-400">Téléphone:</span>{' '}
-                      {selectedClient.telephone}
+                      <span className="text-gray-600 dark:text-gray-400">Téléphone :</span>{' '}
+                      {selectedClient.telephone || '-'}
+                    </div>
+                    <div>
+                      <span className="text-gray-600 dark:text-gray-400">Ville :</span>{' '}
+                      {selectedClient.ville || '-'}
                     </div>
                     <div className="col-span-2">
-                      <span className="text-gray-600 dark:text-gray-400">Email:</span>{' '}
-                      {selectedClient.email || '-'}
+                      <span className="text-gray-600 dark:text-gray-400">Représentant :</span>{' '}
+                      {selectedClient.representant || '-'}
                     </div>
                   </div>
                 </CardContent>
