@@ -44,23 +44,22 @@ export default function CommandeForm() {
 
   const fetchClients = async () => {
     try {
-      const data = await listClients({ actif: true, limit: 200 });
-      // Extraire le tableau items de la réponse paginée
+      const data = await listClients({ actif: true, page_size: 500 });
+      // Réponse paginée {items, total, page, page_size}
       setClients(Array.isArray(data) ? data : (data?.items || []));
     } catch (error) {
       toast.error('Erreur chargement clients');
-      setClients([]); // S'assurer que clients reste un tableau
+      setClients([]);
     }
   };
 
   const fetchProduits = async () => {
     try {
-      const data = await listProducts({ actif: true, limit: 200 });
-      // Extraire le tableau items de la réponse paginée
+      const data = await listProducts({ actif: true, page_size: 100 });
       setProduits(Array.isArray(data) ? data : (data?.items || []));
     } catch (error) {
       toast.error('Erreur chargement produits');
-      setProduits([]); // S'assurer que produits reste un tableau
+      setProduits([]);
     }
   };
 

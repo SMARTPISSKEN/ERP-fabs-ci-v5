@@ -12,6 +12,7 @@ import Produits from "./pages/Produits";
 import ProduitDetail from "./pages/ProduitDetail";
 import Commandes from "./pages/Commandes";
 import CommandeDetail from "./pages/CommandeDetail";
+import CommandeForm from "./components/commandes/CommandeForm";
 import Factures from "./pages/Factures";
 import FactureDetail from "./pages/FactureDetail";
 import Paiements from "./pages/Paiements";
@@ -90,6 +91,14 @@ function App() {
               element={
                 <ProtectedRoute moduleKey="commandes">
                   <Commandes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/commandes/nouvelle"
+              element={
+                <ProtectedRoute moduleKey="commandes">
+                  <CommandeForm />
                 </ProtectedRoute>
               }
             />

@@ -387,4 +387,15 @@ Build an ERP for the Ivorian publishing house **EDITIONS FABS-CI** (Bingerville,
 - Uniformiser le format des LIST endpoints : 9 endpoints renvoient une liste plate (commandes, factures, paiements, stock, livraisons, retours, comptabilite, utilisateurs, parametres) vs 3 paginés (clients, produits, documents-ai). Risque divergence frontend.
 - Documents AI étapes 4 & 6 (drag&drop upload + export PDF/WhatsApp) — non démarré.
 - `page_size` limité à 100 sur `/api/produits` (OK actuellement avec 35 produits).
+- Pas de page FactureForm pour le bouton "Nouvelle facture" sur `/factures` (route `/factures/nouvelle` à créer ou supprimer le bouton).
+
+---
+
+## CHANGELOG — Iteration 10 (Feb 2026)
+
+### ✅ Bug fix critique : impossible de créer une nouvelle commande
+- **Root cause identifié** : la route `/commandes/nouvelle` n'était PAS définie dans `App.js`. Le bouton "Nouvelle commande" naviguait vers cette URL qui matchait alors `/commandes/:id` → la page CommandeDetail tentait de fetch une commande avec `id="nouvelle"` → erreur 404 silencieuse.
+- **Fix** : ajout de la route `/commandes/nouvelle` → `<CommandeForm />` dans App.js, avec `ProtectedRoute moduleKey="commandes"`.
+- **Bug bonus corrigé** : `CommandeForm.jsx` utilisait `limit: 200` pour fetcher clients/produits, mais `listClients()` ignore `limit` (n'extrait que `page_size`) → seuls 20 clients/produits visibles. Remplacé par `page_size: 500` (clients) et `page_size: 100` (produits).
+- **Tests** : 10/10 tests E2E backend PASS (`tests/test_full_audit_iter8.py::TestE2E`) — création + validation + facture + paiement + BL + BR fonctionnent parfaitement côté API.
 
