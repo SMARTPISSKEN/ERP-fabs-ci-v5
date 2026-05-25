@@ -384,75 +384,90 @@ def build_products_router(db: AsyncIOMotorDatabase, resolve_user) -> APIRouter:
 # Seed — 35 livres scolaires Côte d'Ivoire
 # ---------------------------------------------------------------------------
 SEED_PRODUCTS: List[dict] = [
-    # MATERNELLE (5)
-    {"titre": "Mon premier livre de lecture — Petite Section", "auteur": "Collectif FABS-CI", "collection": "Eveil",       "categorie": "maternelle", "niveau_scolaire": "PS",  "isbn": "9782070001011", "prix_achat": 900,  "prix_vente": 1500},
-    {"titre": "Cahier d'écriture Moyenne Section",             "auteur": "M. Kouamé",         "collection": "Eveil",       "categorie": "maternelle", "niveau_scolaire": "MS",  "isbn": "9782070001028", "prix_achat": 1100, "prix_vente": 1800},
-    {"titre": "Mes premiers chiffres — Grande Section",        "auteur": "N. Bamba",          "collection": "Eveil",       "categorie": "maternelle", "niveau_scolaire": "GS",  "isbn": "9782070001035", "prix_achat": 1100, "prix_vente": 1900},
-    {"titre": "Coloriage et formes — GS",                       "auteur": "Collectif FABS-CI", "collection": "Eveil",       "categorie": "maternelle", "niveau_scolaire": "GS",  "isbn": "9782070001042", "prix_achat": 900,  "prix_vente": 1500},
-    {"titre": "Comptines de Côte d'Ivoire",                     "auteur": "A. Adingra",        "collection": "Eveil",       "categorie": "maternelle", "niveau_scolaire": "Maternelle", "isbn": "9782070001059", "prix_achat": 1200, "prix_vente": 2000},
-
-    # PRIMAIRE (10)
-    {"titre": "Mathématiques CP1 — Livre de l'élève",          "auteur": "Dr K. Yao",          "collection": "Réussir",     "categorie": "primaire",  "niveau_scolaire": "CP1", "isbn": "9782070001066", "prix_achat": 1800, "prix_vente": 3000},
-    {"titre": "Français CP1 — Méthode de lecture",             "auteur": "Mme F. Touré",       "collection": "Réussir",     "categorie": "primaire",  "niveau_scolaire": "CP1", "isbn": "9782070001073", "prix_achat": 1800, "prix_vente": 3000},
-    {"titre": "Mathématiques CP2",                              "auteur": "Dr K. Yao",          "collection": "Réussir",     "categorie": "primaire",  "niveau_scolaire": "CP2", "isbn": "9782070001080", "prix_achat": 1900, "prix_vente": 3200},
-    {"titre": "Français CE1",                                   "auteur": "Mme F. Touré",       "collection": "Réussir",     "categorie": "primaire",  "niveau_scolaire": "CE1", "isbn": "9782070001097", "prix_achat": 1900, "prix_vente": 3200},
-    {"titre": "Sciences CE2 — Découverte du monde",            "auteur": "Pr S. Ouattara",     "collection": "Réussir",     "categorie": "primaire",  "niveau_scolaire": "CE2", "isbn": "9782070001103", "prix_achat": 2000, "prix_vente": 3400},
-    {"titre": "Histoire-Géographie CM1 Côte d'Ivoire",         "auteur": "M. Coulibaly",       "collection": "Patrimoine",  "categorie": "primaire",  "niveau_scolaire": "CM1", "isbn": "9782070001110", "prix_achat": 2200, "prix_vente": 3600},
-    {"titre": "Mathématiques CM2",                              "auteur": "Dr K. Yao",          "collection": "Réussir",     "categorie": "primaire",  "niveau_scolaire": "CM2", "isbn": "9782070001127", "prix_achat": 2400, "prix_vente": 3900},
-    {"titre": "Français CM2 — Lectures et expression",        "auteur": "Mme F. Touré",       "collection": "Réussir",     "categorie": "primaire",  "niveau_scolaire": "CM2", "isbn": "9782070001134", "prix_achat": 2400, "prix_vente": 3900},
-    {"titre": "Anglais CE1 — My first book",                   "auteur": "S. Konan",           "collection": "Languages",   "categorie": "primaire",  "niveau_scolaire": "CE1", "isbn": "9782070001141", "prix_achat": 1900, "prix_vente": 3200},
-    {"titre": "Cahier d'exercices CM1",                         "auteur": "Collectif FABS-CI",  "collection": "Cahiers",     "categorie": "primaire",  "niveau_scolaire": "CM1", "isbn": "9782070001158", "prix_achat": 1500, "prix_vente": 2500},
-
-    # PREMIER CYCLE (8)
-    {"titre": "Mathématiques 6e",                               "auteur": "Pr A. Diallo",       "collection": "Excellence",  "categorie": "premier_cycle", "niveau_scolaire": "6e", "isbn": "9782070001165", "prix_achat": 2800, "prix_vente": 4500},
-    {"titre": "Français 6e — Textes et expression",            "auteur": "Mme A. Bamba",       "collection": "Excellence",  "categorie": "premier_cycle", "niveau_scolaire": "6e", "isbn": "9782070001172", "prix_achat": 2800, "prix_vente": 4500},
-    {"titre": "Histoire-Géographie 5e",                         "auteur": "M. Coulibaly",       "collection": "Patrimoine",  "categorie": "premier_cycle", "niveau_scolaire": "5e", "isbn": "9782070001189", "prix_achat": 2900, "prix_vente": 4600},
-    {"titre": "Sciences Physiques 5e",                          "auteur": "Pr S. Ouattara",     "collection": "Excellence",  "categorie": "premier_cycle", "niveau_scolaire": "5e", "isbn": "9782070001196", "prix_achat": 2900, "prix_vente": 4700},
-    {"titre": "SVT 4e — Le vivant",                             "auteur": "Dr H. N'Goran",      "collection": "Excellence",  "categorie": "premier_cycle", "niveau_scolaire": "4e", "isbn": "9782070001202", "prix_achat": 3000, "prix_vente": 4800},
-    {"titre": "Anglais 4e — Move on!",                          "auteur": "S. Konan",           "collection": "Languages",   "categorie": "premier_cycle", "niveau_scolaire": "4e", "isbn": "9782070001219", "prix_achat": 2900, "prix_vente": 4700},
-    {"titre": "Mathématiques 3e — Préparation BEPC",           "auteur": "Pr A. Diallo",       "collection": "Excellence",  "categorie": "premier_cycle", "niveau_scolaire": "3e", "isbn": "9782070001226", "prix_achat": 3200, "prix_vente": 5200},
-    {"titre": "Français 3e — Du texte à la dissertation",     "auteur": "Mme A. Bamba",       "collection": "Excellence",  "categorie": "premier_cycle", "niveau_scolaire": "3e", "isbn": "9782070001233", "prix_achat": 3200, "prix_vente": 5200},
-
-    # SECOND CYCLE (7)
-    {"titre": "Mathématiques 2nde A — Analyse",                 "auteur": "Pr A. Diallo",       "collection": "Horizons",    "categorie": "second_cycle",  "niveau_scolaire": "2nde", "isbn": "9782070001240", "prix_achat": 3800, "prix_vente": 6200},
-    {"titre": "Mathématiques 2nde C — Scientifique",            "auteur": "Pr A. Diallo",       "collection": "Horizons",    "categorie": "second_cycle",  "niveau_scolaire": "2nde", "isbn": "9782070001257", "prix_achat": 4000, "prix_vente": 6500},
-    {"titre": "Physique-Chimie 1ère D",                          "auteur": "Pr S. Ouattara",     "collection": "Horizons",    "categorie": "second_cycle",  "niveau_scolaire": "1ère", "isbn": "9782070001264", "prix_achat": 4200, "prix_vente": 6900},
-    {"titre": "Philosophie Terminale A — Préparation BAC",     "auteur": "M. B. Aké",          "collection": "Horizons",    "categorie": "second_cycle",  "niveau_scolaire": "Terminale", "isbn": "9782070001271", "prix_achat": 4500, "prix_vente": 7500},
-    {"titre": "Mathématiques Terminale C",                       "auteur": "Pr A. Diallo",       "collection": "Horizons",    "categorie": "second_cycle",  "niveau_scolaire": "Terminale", "isbn": "9782070001288", "prix_achat": 4800, "prix_vente": 8000},
-    {"titre": "Histoire-Géographie Terminale",                   "auteur": "M. Coulibaly",       "collection": "Patrimoine",  "categorie": "second_cycle",  "niveau_scolaire": "Terminale", "isbn": "9782070001295", "prix_achat": 4500, "prix_vente": 7500},
-    {"titre": "Anglais Terminale — Towards the BAC",             "auteur": "S. Konan",           "collection": "Languages",   "categorie": "second_cycle",  "niveau_scolaire": "Terminale", "isbn": "9782070001301", "prix_achat": 4500, "prix_vente": 7500},
-
-    # LITTÉRATURE AFRICAINE (5)
-    {"titre": "Les soleils des indépendances",                   "auteur": "Ahmadou Kourouma",   "collection": "Classiques",  "categorie": "litterature", "niveau_scolaire": "Tous niveaux", "isbn": "9782070001318", "prix_achat": 3000, "prix_vente": 5500},
-    {"titre": "L'Aventure ambiguë",                              "auteur": "Cheikh Hamidou Kane", "collection": "Classiques",  "categorie": "litterature", "niveau_scolaire": "Tous niveaux", "isbn": "9782070001325", "prix_achat": 2800, "prix_vente": 5200},
-    {"titre": "Une si longue lettre",                            "auteur": "Mariama Bâ",         "collection": "Classiques",  "categorie": "litterature", "niveau_scolaire": "Tous niveaux", "isbn": "9782070001332", "prix_achat": 2800, "prix_vente": 5200},
-    {"titre": "Le Mandat",                                       "auteur": "Ousmane Sembène",    "collection": "Classiques",  "categorie": "litterature", "niveau_scolaire": "Tous niveaux", "isbn": "9782070001349", "prix_achat": 2700, "prix_vente": 4800},
-    {"titre": "Allah n'est pas obligé",                          "auteur": "Ahmadou Kourouma",   "collection": "Classiques",  "categorie": "litterature", "niveau_scolaire": "Tous niveaux", "isbn": "9782070001356", "prix_achat": 3200, "prix_vente": 5800},
+    # Maternelle - Grande section
+    {"code": "FABS-CI79", "titre": "MON CAHIER DE PRÉLECTURE CP1", "niveau": "Grande section", "categorie": "Maternelle", "prix_vente": 2000, "stock_actuel": 150},
+    
+    # Primaire - CP1 à CM2
+    {"code": "FABS-CI76", "titre": "MON CAHIER D'ÉCRITURE CP1", "niveau": "CP1", "categorie": "Primaire", "prix_vente": 2000, "stock_actuel": 200},
+    {"code": "FABS-CI83", "titre": "MON CAHIER D'ÉCRITURE CP2", "niveau": "CP2", "categorie": "Primaire", "prix_vente": 2000, "stock_actuel": 200},
+    {"code": "FABS-CI90", "titre": "MON CAHIER DÉCRITURE CE1", "niveau": "CE1", "categorie": "Primaire", "prix_vente": 2000, "stock_actuel": 180},
+    {"code": "FABS-CI06", "titre": "MON CAHIER D'ÉCRITURE CE2", "niveau": "CE2", "categorie": "Primaire", "prix_vente": 2000, "stock_actuel": 180},
+    {"code": "FABS-CI64", "titre": "MON CAHIER D'ÉCRITURE CM1", "niveau": "CM1", "categorie": "Primaire", "prix_vente": 2000, "stock_actuel": 170},
+    {"code": "FABS-CI82", "titre": "MON CAHIER D'ÉCRITURE CM2", "niveau": "CM2", "categorie": "Primaire", "prix_vente": 2000, "stock_actuel": 170},
+    
+    # Premier Cycle - 6ème
+    {"code": "FABS-CI24", "titre": "ACTIVITE PRATIQUE DE LA FLUTE A BEC SOPRANO 6ÈME", "niveau": "6ème", "categorie": "Premier cycle", "prix_vente": 2000, "stock_actuel": 120},
+    {"code": "FABS-CI68", "titre": "MON CAHIER D'ACTIVITÉS D'ÉDUCATION MUSICALE 6IEME", "niveau": "6ème", "categorie": "Premier cycle", "prix_vente": 2000, "stock_actuel": 120},
+    {"code": "FABS-CI31", "titre": "MON CAHIER DE COURS ET D'ACTIVITÉS D'ÉDUCATION MUSICALE 6ÈME", "niveau": "6ème", "categorie": "Premier cycle", "prix_vente": 3000, "stock_actuel": 100},
+    
+    # Premier Cycle - 5ème
+    {"code": "FABS-CI61", "titre": "ACTIVITE PRATIQUE DE LA FLUTE A BEC SOPRANO 5ÈME", "niveau": "5ème", "categorie": "Premier cycle", "prix_vente": 2500, "stock_actuel": 110},
+    {"code": "FABS-CI75", "titre": "MON CAHIER D'ACTIVITE D'EDUCATION MUSICALE 5EME", "niveau": "5ème", "categorie": "Premier cycle", "prix_vente": 2000, "stock_actuel": 110},
+    {"code": "FABS-CI48", "titre": "MON CAHIER DE COURS ET D'ACTIVITÉS D'ÉDUCATION MUSICALE 5ÈME", "niveau": "5ème", "categorie": "Premier cycle", "prix_vente": 3000, "stock_actuel": 95},
+    
+    # Premier Cycle - 4ème
+    {"code": "FABS-CI07", "titre": "MON CAHIER D'ACTIVITE D'EDUCATION MUSICALE 4ÈME", "niveau": "4ème", "categorie": "Premier cycle", "prix_vente": 2000, "stock_actuel": 105},
+    {"code": "FABS-CI86", "titre": "MON CAHIER DE COURS ET D'ACTIVITÉS D'EDUCATION MUSICALE 4EME", "niveau": "4ème", "categorie": "Premier cycle", "prix_vente": 3000, "stock_actuel": 90},
+    
+    # Premier Cycle - 3ème (BEPC)
+    {"code": "FABS-CI05", "titre": "MEMO HISTOIRE-GEOGRAPHIE BEPC", "niveau": "3ème", "categorie": "Premier cycle", "prix_vente": 2500, "stock_actuel": 130},
+    {"code": "FABS-CI20", "titre": "MON CAHIER D'ACTIVITE D'EDUCATION MUSICALE 3ÈME", "niveau": "3ème", "categorie": "Premier cycle", "prix_vente": 2000, "stock_actuel": 100},
+    {"code": "FABS-CI32", "titre": "TEST SVT - BEPC", "niveau": "3ème", "categorie": "Premier cycle", "prix_vente": 3000, "stock_actuel": 120},
+    {"code": "FABS-CI25", "titre": "TEST FRANÇAIS BEPC", "niveau": "3ème", "categorie": "Premier cycle", "prix_vente": 3500, "stock_actuel": 125},
+    {"code": "FABS-CI93", "titre": "MON CAHIER DE COURS ET D'ACTIVITÉS D'ÉDUCATION MUSICALE 3ÈME", "niveau": "3ème", "categorie": "Premier cycle", "prix_vente": 3000, "stock_actuel": 85},
+    {"code": "FABS-CI18", "titre": "TEST PHYSIQUE-CHIMIE BEPC", "niveau": "3ème", "categorie": "Premier cycle", "prix_vente": 3000, "stock_actuel": 115},
+    
+    # Second Cycle - 2nde
+    {"code": "FABS-CI33", "titre": "SACERDOCE", "niveau": "2nde", "categorie": "Second cycle", "prix_vente": 3000, "stock_actuel": 80},
+    {"code": "FABS-CI17", "titre": "MON CAHIER DE COURS ET D'ACTIVITES D'EDUCATION MUSICALE 2ND", "niveau": "2nde", "categorie": "Second cycle", "prix_vente": 3000, "stock_actuel": 75},
+    
+    # Second Cycle - 1ère
+    {"code": "FABS-CI85", "titre": "CAHIER DE COMPETENCE PHILO 1ÈRE", "niveau": "1ère", "categorie": "Second cycle", "prix_vente": 3000, "stock_actuel": 90},
+    
+    # Second Cycle - Terminale (BAC)
+    {"code": "FABS-CI26", "titre": "MEMO SVT BAC", "niveau": "Terminale", "categorie": "Second cycle", "prix_vente": 3000, "stock_actuel": 140},
+    {"code": "FABS-CI99", "titre": "MEMO HISTOIRE-GEOGRAPHIE BAC", "niveau": "Terminale", "categorie": "Second cycle", "prix_vente": 3000, "stock_actuel": 135},
+    {"code": "FABS-CI02", "titre": "MEMO PHYSIQUE CHIMIE BAC", "niveau": "Terminale", "categorie": "Second cycle", "prix_vente": 3000, "stock_actuel": 130},
+    {"code": "FABS-CI57", "titre": "MEMO FRANÇAIS BAC", "niveau": "Terminale", "categorie": "Second cycle", "prix_vente": 3000, "stock_actuel": 125},
+    {"code": "FABS-CI29", "titre": "MEMO PHILOSOPHIE BAC", "niveau": "Terminale", "categorie": "Second cycle", "prix_vente": 4000, "stock_actuel": 110},
+    {"code": "FABS-CI195", "titre": "MEMO MATHEMATIQUE BAC", "niveau": "Terminale", "categorie": "Second cycle", "prix_vente": 3000, "stock_actuel": 145},
+    {"code": "FABS-CI63", "titre": "TEST FRANÇAIS BAC", "niveau": "Terminale", "categorie": "Second cycle", "prix_vente": 3500, "stock_actuel": 100},
+    {"code": "FABS-CI78", "titre": "TEST PHYSIQUE-CHIMIE BAC", "niveau": "Terminale", "categorie": "Second cycle", "prix_vente": 4000, "stock_actuel": 95},
+    {"code": "FABS-CI00", "titre": "TEST SVT BAC", "niveau": "Terminale", "categorie": "Second cycle", "prix_vente": 4000, "stock_actuel": 90},
+    
+    # Livre commun - 6ème à Terminale
+    {"code": "FABS-CI71", "titre": "MON CAHIER DE COURS D'ARTS PLASTIQUES", "niveau": "6ème à Terminale", "categorie": "Livre commun", "prix_vente": 2000, "stock_actuel": 200},
+    {"code": "FABS-CI38", "titre": "MON CAHIER DE LEÇON D'EDUCATION MUSICALE", "niveau": "6ème à Terminale", "categorie": "Livre commun", "prix_vente": 2000, "stock_actuel": 180},
 ]
 
 
-async def seed_products(db: AsyncIOMotorDatabase, owner_user_id: str) -> int:
+async def seed_real_products(db: AsyncIOMotorDatabase, owner_user_id: str) -> int:
+    """Seed les 35 produits réels FABS-CI"""
     existing = await db.produits.count_documents({})
     if existing:
         return 0
+    
+    now = _now_iso()
     inserted = 0
+    
     for p in SEED_PRODUCTS:
-        ref = await next_product_reference(db)
-        await db.produits.insert_one({
-            "product_id": f"prd_{uuid.uuid4().hex[:12]}",
-            "reference": ref,
-            **p,
-            "stock_actuel": 50,
-            "stock_minimum": 10,
+        doc = {
+            "produit_id": str(uuid.uuid4()),
+            "code_article": p["code"],
+            "titre": p["titre"],
+            "categorie": p["categorie"],
+            "niveau_scolaire": p["niveau"],
+            "prix_vente": p["prix_vente"],
+            "stock_actuel": p["stock_actuel"],
+            "seuil_alerte": 20,
             "actif": True,
             "created_by": owner_user_id,
-            "created_at": _now_iso(),
-            "updated_at": _now_iso(),
-        })
+            "created_at": now,
+            "updated_at": now
+        }
+        await db.produits.insert_one(doc)
         inserted += 1
-    # Inject 2 stock alerts so the dashboard widget has real data right away
-    await db.produits.update_one({"reference": "FABS-PRD-0001"}, {"$set": {"stock_actuel": 3}})   # alerte (<= 10)
-    await db.produits.update_one({"reference": "FABS-PRD-0028"}, {"$set": {"stock_actuel": 0}})  # rupture
+    
     return inserted
 
 
