@@ -21,6 +21,7 @@ from dotenv import load_dotenv
 # Import all ERP modules
 from clients_module import build_clients_router, seed_clients
 from products_module import build_products_router, seed_real_products
+from products_test_module import build_products_test_router
 from commandes_module import build_commandes_router, seed_commandes
 from factures_module import build_factures_router, seed_factures
 from paiements_module import build_paiements_router, seed_paiements
@@ -261,6 +262,7 @@ async def health():
 # ============================================================================
 api_router.include_router(build_clients_router(db, resolve_user))
 api_router.include_router(build_products_router(db, resolve_user))
+api_router.include_router(build_products_test_router(db, resolve_user))
 api_router.include_router(build_commandes_router(db, resolve_user))
 api_router.include_router(build_factures_router(db, resolve_user))
 api_router.include_router(build_paiements_router(db, resolve_user))
