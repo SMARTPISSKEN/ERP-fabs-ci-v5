@@ -12,7 +12,7 @@ import {
   TopClientsBarChart,
 } from "../components/dashboard/Charts";
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = "/api";  // Use relative path with proxy
 
 export default function Dashboard() {
   const { user } = useAuth();
