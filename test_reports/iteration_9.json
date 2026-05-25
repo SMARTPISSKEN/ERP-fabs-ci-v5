@@ -1,0 +1,47 @@
+{
+  "summary": "RETEST iter9 après 2 fixes critiques iter8 — 54/54 tests PASS (100%). Suite de régression /app/backend/tests/test_full_audit_iter8.py exécutée en 1.47s. Les 2 bugs précédemment fail sont CONFIRMÉS CORRIGÉS: (1) test_08_create_bon_retour_and_validate_stock_reincremented PASS — la projection MongoDB inclut désormais stock_actuel et l'update utilise $inc atomique, le scénario stock 100 → BL -3 → stock 97 → BR +1 → stock 98 est validé. (2) test_dg_should_be_denied_per_prd PASS — administration_module.py READ_ROLES = {'super_admin'} uniquement, le DG reçoit bien 403 sur GET /api/utilisateurs. Les 52 autres tests restent PASS (aucune régression). Le super_admin conserve l'accès (test_super_can_list PASS). bons_livraison_module.py confirmé OK ($inc avec lecture stock_avant préalable pour le mouvement_stock).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "GET /api/produits, /api/clients, /api/documents-ai (paginated) vs autres",
+        "issue": "Incohérence de format toujours présente (paginé vs liste plate). Non bloquant — déjà signalé iter8. Recommandation: uniformiser sur format paginé."
+      },
+      {
+        "endpoint": "GET /api/parametres",
+        "issue": "READ_ROLES de parametres_router partage la même constante READ_ROLES={'super_admin'} dans administration_module.py — par effet de bord, le DG ne peut plus lire /api/parametres non plus. Si l'intention était de restreindre uniquement /utilisateurs au super_admin, séparer les constantes (PARAMETRES_READ_ROLES vs UTILISATEURS_READ_ROLES). À confirmer avec le PRD: 'Le DG a accès à 11 modules (pas Utilisateurs)' → cela suggère que le DG doit pouvoir lire les paramètres. Le test iter8 ne teste pas DG sur /parametres, donc aucun test n'échoue, mais comportement à valider."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_full_audit_iter8.py",
+    "/app/test_reports/pytest/pytest_iter9.xml"
+  ],
+  "action_items": [
+    "[OPTIONNEL] Vérifier si /api/parametres doit rester accessible au DG. Si oui, scinder READ_ROLES dans administration_module.py en 2 constantes distinctes (UTILISATEURS_READ_ROLES = {'super_admin'}, PARAMETRES_READ_ROLES = {'super_admin','directeur_general'}).",
+    "[INFO] Considérer l'uniformisation du format de réponse des LIST endpoints pour éviter la divergence frontend."
+  ],
+  "critical_code_review_comments": [
+    "FIX #1 validé: bons_retour_module.py L237-240 — projection inclut désormais stock_actuel, L259-265 utilise $inc atomique. Le mouvement_stock enregistre stock_avant et stock_apres calculés à partir du read avant $inc (note: en cas de concurrence forte, stock_apres dans mouvements_stock pourrait être théorique — l'update DB elle-même reste atomique).",
+    "FIX #1 bis validé: bons_livraison_module.py L194-226 — utilise $inc négatif. Pattern read-then-inc identique au BR. Cohérent.",
+    "FIX #2 validé: administration_module.py L21 READ_ROLES = {'super_admin'} uniquement. Le DG reçoit 403 sur GET /api/utilisateurs.",
+    "Effet de bord à surveiller: la même constante READ_ROLES est utilisée par parametres_router (L184, L198). Le DG est donc également exclu de /api/parametres. Si non voulu, scinder les constantes.",
+    "Recommandation persistante: dans les 2 modules BL et BR, le `stock_apres` inscrit dans mouvements_stock est calculé en mémoire (stock_avant +/- quantite), ce qui peut diverger du stock réel en cas d'écritures concurrentes entre le find_one et le $inc. Pour exactitude parfaite, utiliser find_one_and_update avec return_document=AFTER et lire stock_apres depuis la réponse."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "100% (54/54)",
+    "frontend": "non testé (testing_type=backend only)"
+  },
+  "test_credentials": "pissken@editionsfabsci.com / Admin@2025 (super_admin) et ali.mamin@editionsfabsci.com / DG@2025 (DG). Tous deux fonctionnels.",
+  "seed_data_creation": "Le test E2E a recréé une commande TEST_E2E + facture auto + paiement partiel + BL livré + BR validé. Les stocks des produits TEST_E2E ont été correctement décrémentés puis ré-incrémentés via $inc (atomique). Aucune corruption observée.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Suite de régression /app/backend/tests/test_full_audit_iter8.py — 54 tests en ~1.5s, couvre auth, sécurité 401, dashboard, clients, produits, paramètres, RBAC utilisateurs (super OK / DG 403), formats de réponse, recherche, analytics, documents AI, comptabilité, stock, et scénario E2E complet 10 étapes (commande → validation → facture → paiement → préparation → BL+stock décrément $inc → BR+stock ré-incrément $inc → analytics → dashboard). Lancer avec `pytest /app/backend/tests/test_full_audit_iter8.py -v`. Si on souhaite tester les paramètres avec un DG: ajouter un test attendant 403 (puisque READ_ROLES = {'super_admin'}) ou demander au main agent de scinder les constantes RBAC.",
+  "rca of the issue": "RETEST — Les 2 RCA identifiés en iter8 ont été corrigés selon les recommandations: (1) bons_retour_module.py : projection MongoDB élargie pour inclure stock_actuel + bascule de $set vers $inc → le scénario stock 100 → BL -3 → BR +1 retourne bien 98 (validé par test_08); le mouvement_stock enregistre désormais des valeurs cohérentes. (2) administration_module.py : READ_ROLES réduit à {'super_admin'} → DG reçoit 403 sur GET /api/utilisateurs (validé par test_dg_should_be_denied_per_prd). Aucun bug résiduel critique. Un effet de bord mineur potentiel: la même constante READ_ROLES affecte aussi /api/parametres — à clarifier avec le PRD."
+}

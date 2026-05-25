@@ -233,8 +233,12 @@ def build_bons_retour_router(db: AsyncIOMotorDatabase, resolve_user) -> APIRoute
         # Create avoir lignes from BR lignes
         br_lignes = await db.br_lignes.find({"br_id": br_id}, {"_id": 0}).to_list(100)
         for br_ligne in br_lignes:
-            produit = await db.produits.find_one({"product_id": br_ligne["produit_id"]}, {"_id": 0, "titre": 1})
-            
+            # FIX: projection must include stock_actuel (sinon corruption stock)
+            produit = await db.produits.find_one(
+                {"product_id": br_ligne["produit_id"]},
+                {"_id": 0, "titre": 1, "stock_actuel": 1},
+            )
+
             avoir_ligne = {
                 "ligne_id": f"ligne_{uuid.uuid4().hex[:12]}",
                 "facture_id": avoir_id,
@@ -247,14 +251,17 @@ def build_bons_retour_router(db: AsyncIOMotorDatabase, resolve_user) -> APIRoute
             }
             await db.facture_lignes.insert_one(avoir_ligne)
 
-            # Create stock movement (entree - retour)
+            # Stock movement (retour = entrée) — usage de $inc pour éviter race conditions
             stock_avant = produit.get("stock_actuel", 0) if produit else 0
             stock_apres = stock_avant + br_ligne["quantite"]
-            
+
             if produit:
                 await db.produits.update_one(
                     {"product_id": br_ligne["produit_id"]},
-                    {"$set": {"stock_actuel": stock_apres, "updated_at": now}}
+                    {
+                        "$inc": {"stock_actuel": br_ligne["quantite"]},
+                        "$set": {"updated_at": now},
+                    },
                 )
             
             mouvement_doc = {

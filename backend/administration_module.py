@@ -17,7 +17,8 @@ from pydantic import BaseModel, Field, EmailStr
 logger = logging.getLogger("fabsci.administration")
 
 ADMIN_ROLES = {"super_admin"}
-READ_ROLES = {"super_admin", "directeur_general"}
+# PRD : seul le super_admin a accès au module Utilisateurs (le DG en est exclu)
+READ_ROLES = {"super_admin"}
 
 ROLES_DISPONIBLES = [
     "super_admin",

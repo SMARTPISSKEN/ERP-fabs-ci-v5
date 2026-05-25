@@ -194,17 +194,23 @@ def build_bons_livraison_router(db: AsyncIOMotorDatabase, resolve_user) -> APIRo
         # Get lignes and create stock movements
         lignes = await db.bl_lignes.find({"bl_id": bl_id}, {"_id": 0}).to_list(100)
         for ligne in lignes:
-            # Create stock movement (sortie)
-            produit = await db.produits.find_one({"product_id": ligne["produit_id"]}, {"_id": 0})
-            if produit:
-                stock_avant = produit.get("stock_actuel", 0)
+            # Atomic decrement via $inc (évite les race conditions concurrentes)
+            produit_before = await db.produits.find_one(
+                {"product_id": ligne["produit_id"]},
+                {"_id": 0, "stock_actuel": 1},
+            )
+            if produit_before:
+                stock_avant = produit_before.get("stock_actuel", 0)
                 stock_apres = max(0, stock_avant - ligne["quantite"])
-                
+
                 await db.produits.update_one(
                     {"product_id": ligne["produit_id"]},
-                    {"$set": {"stock_actuel": stock_apres, "updated_at": now}}
+                    {
+                        "$inc": {"stock_actuel": -ligne["quantite"]},
+                        "$set": {"updated_at": now},
+                    },
                 )
-                
+
                 mouvement_doc = {
                     "mouvement_id": f"mvt_{uuid.uuid4().hex[:12]}",
                     "produit_id": ligne["produit_id"],
