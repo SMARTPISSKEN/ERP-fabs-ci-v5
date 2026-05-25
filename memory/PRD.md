@@ -399,3 +399,15 @@ Build an ERP for the Ivorian publishing house **EDITIONS FABS-CI** (Bingerville,
 - **Bug bonus corrigé** : `CommandeForm.jsx` utilisait `limit: 200` pour fetcher clients/produits, mais `listClients()` ignore `limit` (n'extrait que `page_size`) → seuls 20 clients/produits visibles. Remplacé par `page_size: 500` (clients) et `page_size: 100` (produits).
 - **Tests** : 10/10 tests E2E backend PASS (`tests/test_full_audit_iter8.py::TestE2E`) — création + validation + facture + paiement + BL + BR fonctionnent parfaitement côté API.
 
+
+---
+
+## CHANGELOG — Iteration 11 (Feb 2026)
+
+### ✅ Bug fix critique : impossible de créer un nouvel utilisateur
+- **Root cause** : le frontend (`utilisateursApi.js`) appelait `POST /api/auth/create-user` et `POST /api/auth/change-password/{user_id}` mais **ces endpoints n'existaient pas** côté backend. Seuls les endpoints GET/PATCH/DELETE de `/api/utilisateurs` étaient implémentés.
+- **Fix** : ajout dans `server.py` de :
+  - `POST /api/auth/create-user` (super_admin only) — crée un utilisateur avec email + password hashé bcrypt. Retourne 409 si email déjà utilisé, 400 si rôle invalide, 403 si non super_admin.
+  - `POST /api/auth/change-password/{user_id}` (super_admin only) — réinitialise le mot de passe (hash bcrypt). Retourne 404 si user introuvable.
+- **Tests** : flux complet validé via curl — création HTTP 201 → login du nouvel utilisateur HTTP 200 → reset password HTTP 200 → re-login HTTP 200. ✓
+- Ajout aussi du composant `ClientPicker` (recherche + bouton « Nouveau client » dans CommandeForm étape 1) — création à la volée via `POST /api/clients?force=true`.

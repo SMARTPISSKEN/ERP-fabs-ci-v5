@@ -15,7 +15,7 @@ import bcrypt
 from fastapi import FastAPI, APIRouter, HTTPException, Header, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from dotenv import load_dotenv
 
 # Import all ERP modules
@@ -150,6 +150,25 @@ class UserProfile(BaseModel):
     created_at: str
     updated_at: str
 
+
+VALID_ROLES = {
+    "super_admin", "directeur_general", "comptable",
+    "directeur_commercial", "gestionnaire_stock",
+    "responsable_magasinier", "secretariat", "service_logistique",
+}
+
+
+class CreateUserRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=6, max_length=128)
+    nom_complet: str = Field(..., min_length=2, max_length=120)
+    role: str = Field(..., description="Un des rôles valides")
+    actif: bool = True
+
+
+class ChangePasswordRequest(BaseModel):
+    new_password: str = Field(..., min_length=6, max_length=128)
+
 # ============================================================================
 # FASTAPI APP
 # ============================================================================
@@ -222,6 +241,69 @@ async def get_me(
 async def logout():
     """Logout (client-side should clear token)"""
     return {"message": "Déconnecté avec succès"}
+
+@api_router.post("/auth/create-user", response_model=UserProfile, status_code=201)
+async def create_user(
+    payload: CreateUserRequest,
+    request: Request,
+    authorization: Optional[str] = Header(default=None),
+):
+    """Create a new user (super_admin only). Email must be unique."""
+    me = await resolve_user(request, authorization)
+    if me["role"] != "super_admin":
+        raise HTTPException(status_code=403, detail="Réservé au super_admin")
+
+    if payload.role not in VALID_ROLES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Rôle invalide. Valeurs autorisées : {sorted(VALID_ROLES)}",
+        )
+
+    existing = await db.users.find_one({"email": payload.email.lower()})
+    if existing:
+        raise HTTPException(status_code=409, detail="Email déjà utilisé")
+
+    import uuid
+    now = datetime.now(timezone.utc).isoformat()
+    user_doc = {
+        "user_id": f"user_{uuid.uuid4().hex[:12]}",
+        "email": payload.email.lower(),
+        "nom_complet": payload.nom_complet.strip(),
+        "role": payload.role,
+        "actif": payload.actif,
+        "password_hash": hash_password(payload.password),
+        "picture": None,
+        "created_at": now,
+        "updated_at": now,
+    }
+    await db.users.insert_one(user_doc)
+    logger.info("✅ User %s created by %s", payload.email, me["email"])
+    return UserProfile(**{k: v for k, v in user_doc.items() if k != "password_hash"})
+
+
+@api_router.post("/auth/change-password/{user_id}")
+async def change_password(
+    user_id: str,
+    payload: ChangePasswordRequest,
+    request: Request,
+    authorization: Optional[str] = Header(default=None),
+):
+    """Reset a user's password (super_admin only)."""
+    me = await resolve_user(request, authorization)
+    if me["role"] != "super_admin":
+        raise HTTPException(status_code=403, detail="Réservé au super_admin")
+
+    target = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    if not target:
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
+
+    now = datetime.now(timezone.utc).isoformat()
+    await db.users.update_one(
+        {"user_id": user_id},
+        {"$set": {"password_hash": hash_password(payload.new_password), "updated_at": now}},
+    )
+    logger.info("🔑 Password reset for %s by %s", target["email"], me["email"])
+    return {"message": "Mot de passe mis à jour avec succès"}
 
 # ============================================================================
 # DASHBOARD ENDPOINT
