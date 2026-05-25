@@ -470,7 +470,6 @@ async def seed_real_products(db: AsyncIOMotorDatabase, owner_user_id: str) -> in
     
     return inserted
 
-
 # ---------------------------------------------------------------------------
 # Catalogue officiel EDITIONS FABS-CI (idempotent — ajoute uniquement les titres
 # qui ne sont pas déjà présents dans la base, comparaison par `titre` exact).
@@ -518,30 +517,3 @@ REAL_PRODUCTS = [
     # --- Renforcement Philo Lycée ---
     {"titre": "MON CAHIER DE RENFORCEMENT DE MES CAPACITES PHILO 1RE",                          "auteur": "M. B. Aké",          "collection": "Renforce", "categorie": "second_cycle",  "niveau_scolaire": "1ère",            "prix_achat": 2500, "prix_vente": 4500},
     {"titre": "MON CAHIER DE RENFORCEMENT DE MES CAPACITES PHILO TLE",                          "auteur": "M. B. Aké",          "collection": "Renforce", "categorie": "second_cycle",  "niveau_scolaire": "Terminale",       "prix_achat": 2500, "prix_vente": 4500},
-
-    # --- Littérature ---
-    {"titre": "Le succès d'un orphelin",                                                        "auteur": "AKE APPIA Y. Doris", "collection": "Récits",   "categorie": "litterature",   "niveau_scolaire": "Tous niveaux",    "prix_achat": 2500, "prix_vente": 4500},
-]
-
-
-async def seed_real_products(db: AsyncIOMotorDatabase, owner_user_id: str) -> int:
-    """Idempotent — ajoute uniquement les titres absents de la collection."""
-    inserted = 0
-    for p in REAL_PRODUCTS:
-        if await db.produits.find_one({"titre": p["titre"]}, {"_id": 1}):
-            continue
-        ref = await next_product_reference(db)
-        await db.produits.insert_one({
-            "product_id": f"prd_{uuid.uuid4().hex[:12]}",
-            "reference": ref,
-            "isbn": None,
-            **p,
-            "stock_actuel": 50,
-            "stock_minimum": 10,
-            "actif": True,
-            "created_by": owner_user_id,
-            "created_at": _now_iso(),
-            "updated_at": _now_iso(),
-        })
-        inserted += 1
-    return inserted

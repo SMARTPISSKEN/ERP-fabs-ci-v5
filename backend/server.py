@@ -340,7 +340,7 @@ async def startup_event():
     if product_count == 0:
         logger.info("Seeding products...")
         count = await seed_real_products(db, "admin_super_001")
-        logger.info(f"✅ {count} products seeded")
+        logger.info(f"✅ {count} real products seeded")
     
     # Seed commandes if not exists
     commande_count = await db.commandes.count_documents({})
