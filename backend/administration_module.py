@@ -19,6 +19,8 @@ logger = logging.getLogger("fabsci.administration")
 ADMIN_ROLES = {"super_admin"}
 # PRD : seul le super_admin a accès au module Utilisateurs (le DG en est exclu)
 READ_ROLES = {"super_admin"}
+# PRD : le DG conserve l'accès aux Paramètres système
+PARAMETRES_READ_ROLES = {"super_admin", "directeur_general"}
 
 ROLES_DISPONIBLES = [
     "super_admin",
@@ -181,7 +183,7 @@ def build_parametres_router(db: AsyncIOMotorDatabase, resolve_user) -> APIRouter
         authorization: Optional[str] = Header(default=None),
     ):
         me = await resolve_user(request, authorization)
-        _ensure(me["role"] in READ_ROLES, 403, "Accès refusé")
+        _ensure(me["role"] in PARAMETRES_READ_ROLES, 403, "Accès refusé")
 
         cursor = db.parametres.find({}, {"_id": 0}).sort("cle", 1)
         docs = await cursor.to_list(100)
@@ -195,7 +197,7 @@ def build_parametres_router(db: AsyncIOMotorDatabase, resolve_user) -> APIRouter
         authorization: Optional[str] = Header(default=None),
     ):
         me = await resolve_user(request, authorization)
-        _ensure(me["role"] in READ_ROLES, 403, "Accès refusé")
+        _ensure(me["role"] in PARAMETRES_READ_ROLES, 403, "Accès refusé")
 
         param = await db.parametres.find_one({"cle": cle}, {"_id": 0})
         _ensure(param is not None, 404, "Paramètre introuvable")

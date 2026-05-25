@@ -357,3 +357,34 @@ Build an ERP for the Ivorian publishing house **EDITIONS FABS-CI** (Bingerville,
 ## Known limitations
 - Emergent Google Auth requires real Google accounts. Pre-seeded emails (`@editionsfabsci.com`) must exist as Google Workspace accounts for the seeded roles to be auto-attached at first login.
 - Frontend uses Bearer/localStorage (not httpOnly cookies) because the K8s ingress wildcards ACAO incompatibly with `credentials:true`. Acceptable for an internal B2B ERP; can be revisited if cookie strategy becomes mandatory.
+
+---
+
+## CHANGELOG — Iteration 9 (Feb 2026)
+
+### ✅ Audit complet et corrections critiques
+- **Injection clients réels** : 419 clients réels FABS-CI insérés en BDD via `import_real_clients.py --apply --purge`. Répartition : 338 écoles + 73 librairies + 8 particuliers répartis sur 32 localités. Compteur `FABS-CLI-0001` à `FABS-CLI-0419`.
+- **Réparation module Produits** (`products_module.py`) : normalisation cohérente des données via `project_product()` qui migre :
+  - `produit_id` (legacy) → `product_id`
+  - Catégories label (`"Maternelle"`) → littéral (`"maternelle"`)
+  - `seuil_alerte` → `stock_minimum`
+  - Ajout de `livre_commun` au type `Categorie`
+- **Suppression** du workaround `products_test_module.py`. Le seul endpoint `/api/produits` est désormais le module principal.
+- **Migration BDD produits** : tous les 35 produits ont été normalisés (categorie en littéral, `product_id` ajouté, `reference` = `code_article`).
+
+### ✅ Bugs critiques corrigés
+- **CRITICAL — Corruption de stock sur Bon de Retour** (`bons_retour_module.py` L233-265) : la projection MongoDB ne récupérait pas `stock_actuel`, écrasant le stock par un `$set` avec une valeur fausse. Fix : projection élargie + bascule sur `$inc` atomique.
+- **CRITICAL — Pattern read-then-set sur Bon de Livraison** (`bons_livraison_module.py` L194-227) : remplacé par `$inc` atomique pour éviter les race conditions concurrentes.
+- **HIGH — RBAC violation DG** (`administration_module.py`) : `READ_ROLES = {"super_admin"}` uniquement pour `/api/utilisateurs`. Ajout de `PARAMETRES_READ_ROLES = {"super_admin", "directeur_general"}` pour conserver l'accès du DG aux paramètres conformément au PRD.
+
+### ✅ Tests
+- **54/54 tests PASS (100%)** via `/app/backend/tests/test_full_audit_iter8.py`
+- Scénario E2E métier complet validé : Client → Commande (2 produits) → Validation → Facture auto (TVA 18%) → Paiement partiel → Préparation → BL livré (stock décrémenté via `$inc`) → BR validé (stock ré-incrémenté via `$inc`) → Analytics → Dashboard.
+- Sécurité : 15 endpoints protégés renvoient bien 401 sans token.
+- RBAC : DG bloqué sur `/api/utilisateurs` (403), autorisé sur `/api/parametres` (200).
+
+### Backlog (P2 — non bloquant)
+- Uniformiser le format des LIST endpoints : 9 endpoints renvoient une liste plate (commandes, factures, paiements, stock, livraisons, retours, comptabilite, utilisateurs, parametres) vs 3 paginés (clients, produits, documents-ai). Risque divergence frontend.
+- Documents AI étapes 4 & 6 (drag&drop upload + export PDF/WhatsApp) — non démarré.
+- `page_size` limité à 100 sur `/api/produits` (OK actuellement avec 35 produits).
+
