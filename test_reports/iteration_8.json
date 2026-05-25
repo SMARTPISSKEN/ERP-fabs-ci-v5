@@ -1,0 +1,61 @@
+{
+  "summary": "Audit complet ERP EDITIONS FABS-CI Iteration 8 — 52/54 tests PASS (96.3%). Couverture: Auth (super + DG), sécurité 401 sur 15 endpoints protégés, Dashboard, Clients (419 réels confirmés + pagination + filtres), Produits (35 réels confirmés + RBAC prix_achat + catégories en littéraux + champ product_id + alertes stock), Paramètres (>=9), Utilisateurs RBAC, Format de réponse (9 plats vs 3 paginés), Recherche globale, Analytics, Documents AI (LIST + analytics + meta types), Comptabilité (écritures + balance), Stock, et scénario E2E COMPLET en 10 étapes (créer commande 2 produits → valider → facture auto → paiement partiel → préparer → BL+livraison avec décrément stock → bon retour → analytics → dashboard). DEUX BUGS CONFIRMÉS: (1) RBAC violation PRD: DG a accès à GET /api/utilisateurs alors que le PRD l'interdit; (2) CORRUPTION DE STOCK lors validation d'un Bon Retour: la projection MongoDB ne récupère pas stock_actuel, le stock est ECRASE par la quantité retournée seule.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "POST /api/bons-retour/{br_id}/valider",
+        "issue": "CORRUPTION CRITIQUE DE STOCK: bons_retour_module.py ligne 236, projection `{'_id':0, 'titre':1}` n'inclut PAS stock_actuel → ligne 251 `stock_avant = produit.get('stock_actuel', 0)` retourne 0 (manquant) → ligne 252 `stock_apres = 0 + quantite_retour` → ligne 255-258 ECRASE le stock_actuel avec juste la quantité retournée. Reproduction: stock initial 100 → BL livraison de 3 → stock=97 → retour de 1 → résultat observé: stock=1 (au lieu de 98). Le `stock_avant` enregistré dans mouvements_stock est également faux (0).",
+        "priority": "CRITICAL"
+      },
+      {
+        "endpoint": "GET /api/utilisateurs",
+        "issue": "Violation RBAC selon PRD: administration_module.py ligne 20 `READ_ROLES = {'super_admin', 'directeur_general'}` permet au DG de lister les utilisateurs. Le PRD (test_credentials.md ligne 22) stipule explicitement que 'Le DG a accès à 11 modules (PAS Utilisateurs)'. Test: GET /api/utilisateurs avec token DG renvoie 200 au lieu de 403.",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": [
+      {
+        "endpoint": "GET /api/produits, /api/clients, /api/documents-ai (paginated) vs autres",
+        "issue": "Incohérence de format documentée: clients/produits/documents-ai renvoient {items, total, page, page_size}; commandes/factures/paiements/stock/bons-livraison/bons-retour/comptabilite/utilisateurs/parametres renvoient une liste plate. Tous les tests passent mais le frontend doit gérer les 2 formats — risque de bugs futurs. Recommandation: uniformiser sur le format paginé pour tous les endpoints de liste."
+      },
+      {
+        "endpoint": "GET /api/produits?page_size=200",
+        "issue": "page_size limité à 100 (Query le=100). OK actuellement (35 produits) mais limite si scale > 100."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_full_audit_iter8.py",
+    "/app/test_reports/pytest/pytest_iter8.xml"
+  ],
+  "action_items": [
+    "[CRITICAL] Corriger bons_retour_module.py ligne 236: changer la projection en `{'_id':0, 'titre':1, 'stock_actuel':1}` OU faire un find_one séparé pour récupérer stock_actuel. C'est un bug de data integrity sévère.",
+    "[HIGH] Aligner administration_module.py sur le PRD: retirer 'directeur_general' de READ_ROLES si la spécification dit que le DG ne doit pas voir /api/utilisateurs. Si l'inclusion est volontaire, mettre à jour le PRD pour clarifier.",
+    "[INFO] Considérer l'uniformisation du format de réponse des LIST endpoints (paginé partout) pour éviter la divergence frontend."
+  ],
+  "critical_code_review_comments": [
+    "bons_retour_module.py L236-258: BUG de projection MongoDB qui provoque corruption du stock. Le produit est fetché avec projection limitée à `titre`, puis `produit.get('stock_actuel', 0)` retourne 0, et l'update SET (au lieu de $inc) écrase le stock réel.",
+    "Recommandation: utiliser `$inc: {stock_actuel: quantite}` pour les retours (et $inc négatif pour les sorties dans bons_livraison_module.py L203-206 qui a le même pattern set-après-lecture — vulnérable aux race conditions concurrentes).",
+    "administration_module.py L20: READ_ROLES inclut DG mais le PRD l'exclut. Soit le code, soit le PRD doit être corrigé.",
+    "bons_livraison_module.py L195-220: même pattern read-then-set, mais ici la projection ne limite pas les champs donc stock_actuel est bien lu. Néanmoins, le pattern est vulnérable aux race conditions si plusieurs BL/BR sont validés en parallèle. Préférer $inc.",
+    "stock_module.py et tous les modules: les projections MongoDB doivent être revues pour s'assurer que tous les champs nécessaires sont récupérés avant les calculs/mises à jour."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_full_audit_iter8.py (nouveau, 54 tests; 52 pass / 2 fail = 2 bugs réels)"
+  ],
+  "success_rate": {
+    "backend": "96.3% (52/54). Les 2 échecs révèlent des bugs réels du backend (corruption stock + RBAC DG), pas des défauts de test.",
+    "frontend": "non testé (testing_type=backend only)"
+  },
+  "test_credentials": "pissken@editionsfabsci.com / Admin@2025 (super_admin) et ali.mamin@editionsfabsci.com / DG@2025 (DG). Source: /app/memory/test_credentials.md. Tous deux fonctionnent via POST /api/auth/login.",
+  "seed_data_creation": "Le test E2E a créé: 1 commande TEST_E2E avec 2 lignes (statut: livree), 1 facture auto-générée depuis cette commande (TVA 18% vérifiée), 1 paiement partiel (50% du TTC, mode especes), 1 BL livré (stock décrémenté de 5 unités au total — 3 du p1 + 2 du p2), 1 BR validé avec 1 unité retournée. Note: à cause du bug stock, le stock_actuel du produit p1 a été CORROMPU (stock écrasé à 1 au lieu de stock_avant+1). Le stock de p2 reste à stock_initial-2.",
+  "retest_needed": true,
+  "main_agent_can_self_test": false,
+  "context_for_next_testing_agent": "Le fichier /app/backend/tests/test_full_audit_iter8.py est un test régression complet (54 tests, ~1.6s) couvrant tous les modules + un scénario E2E métier. Pour retest après correction: lancer `pytest /app/backend/tests/test_full_audit_iter8.py -v`. Les 2 bugs critiques à vérifier après fix: (a) test_08_create_bon_retour_and_validate_stock_reincremented doit PASS, (b) test_dg_should_be_denied_per_prd doit PASS. Attention: la base de données contient maintenant des données TEST_E2E (commande, facture, paiement, BL, BR) — relancer le test va créer de nouvelles entrées et peut affecter les comptages d'analytics, mais ne fait pas échouer les tests. Si on veut nettoyer, supprimer les docs avec `notes` ou `motif_global` contenant 'TEST_E2E'.",
+  "rca of the issue": "RCA BUG STOCK BR — Cause racine: dans bons_retour_module.py L236, la projection MongoDB `{'_id': 0, 'titre': 1}` est trop restrictive et ne récupère pas `stock_actuel`. En conséquence, L251 `stock_avant = produit.get('stock_actuel', 0)` renvoie 0 (clé absente du dict). L252 calcule `stock_apres = 0 + quantite_retour`. L255-258 fait un $set (et non $inc) qui REMPLACE la valeur réelle par cette valeur tronquée. Reproduction: créer un produit avec stock=100, valider un BR de 1 unité → stock devient 1 au lieu de 101 (perte de 100 unités). Mitigation immédiate (1 ligne): changer la projection en `{'_id': 0, 'titre': 1, 'stock_actuel': 1}`. Mitigation robuste: utiliser `$inc: {stock_actuel: br_ligne['quantite']}` au lieu de read-then-set pour éviter aussi les race conditions. RCA RBAC DG — Cause: administration_module.py ligne 20 inclut explicitement 'directeur_general' dans READ_ROLES du router /utilisateurs. Décision intentionnelle ou bug? Le PRD dit non. Fix: retirer 'directeur_general' de READ_ROLES (ligne 20) si l'on suit le PRD."
+}

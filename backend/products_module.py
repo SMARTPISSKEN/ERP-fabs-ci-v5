@@ -31,13 +31,24 @@ READ_ROLES = {
 WRITE_ROLES = READ_ROLES  # same set per Sprint 2 matrix
 FINANCIAL_ROLES = {"super_admin", "directeur_general", "comptable"}  # see prix_achat
 
-Categorie = Literal["maternelle", "primaire", "premier_cycle", "second_cycle", "litterature"]
+Categorie = Literal["maternelle", "primaire", "premier_cycle", "second_cycle", "litterature", "livre_commun"]
 CATEGORIE_LABELS = {
     "maternelle":     "Maternelle",
     "primaire":       "Primaire",
     "premier_cycle":  "Premier cycle",
     "second_cycle":   "Second cycle",
     "litterature":    "Littérature",
+    "livre_commun":   "Livre commun",
+}
+
+# Normalisation des libellés legacy → littéraux acceptés
+_CATEGORIE_NORMALIZE = {
+    "Maternelle": "maternelle",
+    "Primaire": "primaire",
+    "Premier cycle": "premier_cycle",
+    "Second cycle": "second_cycle",
+    "Littérature": "litterature",
+    "Livre commun": "livre_commun",
 }
 
 
@@ -147,6 +158,18 @@ def project_product(doc: dict, *, see_prix_achat: bool) -> dict:
     if not doc:
         return doc
     d = {k: v for k, v in doc.items() if k != "_id"}
+    # Compat : migrer `produit_id` (legacy) → `product_id`
+    if "product_id" not in d and "produit_id" in d:
+        d["product_id"] = d.pop("produit_id")
+    # Compat : normaliser categorie label → littéral
+    cat = d.get("categorie")
+    if cat in _CATEGORIE_NORMALIZE:
+        d["categorie"] = _CATEGORIE_NORMALIZE[cat]
+    # Compat : seuil_alerte (legacy) → stock_minimum
+    if "stock_minimum" not in d and "seuil_alerte" in d:
+        d["stock_minimum"] = d.get("seuil_alerte", 10)
+    d.setdefault("stock_minimum", 10)
+    d.setdefault("stock_actuel", 0)
     d["statut_stock"] = compute_stock_status(d.get("stock_actuel", 0), d.get("stock_minimum", 0))
     if not see_prix_achat:
         d["prix_achat"] = None
@@ -471,10 +494,7 @@ async def seed_real_products(db: AsyncIOMotorDatabase, owner_user_id: str) -> in
     return inserted
 
 # ---------------------------------------------------------------------------
-# Catalogue officiel EDITIONS FABS-CI (idempotent — ajoute uniquement les titres
-# qui ne sont pas déjà présents dans la base, comparaison par `titre` exact).
+# Catalogue officiel EDITIONS FABS-CI — déjà seedé via script externe
+# (cf. seed_products_fabs.py). La fonction publique `seed_real_products`
+# définie plus haut est conservée comme fallback idempotent.
 # ---------------------------------------------------------------------------
-
-async def seed_real_products(db: AsyncIOMotorDatabase, owner_user_id: str) -> int:
-    """Les produits sont déjà seeded via script externe"""
-    return 0
