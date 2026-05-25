@@ -20,6 +20,7 @@ import Stock from "./pages/Stock";
 import BonsLivraison from "./pages/BonsLivraison";
 import BonsRetour from "./pages/BonsRetour";
 import Comptabilite from "./pages/Comptabilite";
+import AnalyticsReports from "./pages/AnalyticsReports";
 import Utilisateurs from "./pages/Utilisateurs";
 import Parametres from "./pages/Parametres";
 import Documents from "./pages/Documents";
@@ -173,6 +174,16 @@ function App() {
               element={
                 <ProtectedRoute moduleKey="comptabilite">
                   <Comptabilite />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Rapports & Analytics */}
+            <Route
+              path="/rapports"
+              element={
+                <ProtectedRoute>
+                  <AnalyticsReports />
                 </ProtectedRoute>
               }
             />

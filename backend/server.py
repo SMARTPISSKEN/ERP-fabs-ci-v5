@@ -32,6 +32,7 @@ from comptabilite_module import build_comptabilite_router, seed_comptabilite
 from administration_module import build_utilisateurs_router, build_parametres_router, seed_parametres
 from recherche_module import build_recherche_router
 from documents_ai_module import build_documents_ai_router, seed_documents_demo
+from analytics_module import build_analytics_router
 from dashboard_data import build_dashboard_payload
 
 # ============================================================================
@@ -274,6 +275,7 @@ api_router.include_router(build_utilisateurs_router(db, resolve_user))
 api_router.include_router(build_parametres_router(db, resolve_user))
 api_router.include_router(build_recherche_router(db, resolve_user))
 api_router.include_router(build_documents_ai_router(db, resolve_user))
+api_router.include_router(build_analytics_router(db, resolve_user))
 
 # Include API router in main app
 app.include_router(api_router)
