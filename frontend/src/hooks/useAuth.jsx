@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useContext, createContext } from "react";
 import axios from "axios";
 
-const API = "/api";  // Relative path - Kubernetes Ingress will route to backend
+const API = "/api";  // Relative path - will be proxied to backend via package.json proxy
 const TOKEN_KEY = "fabsci_access_token";
 
 export const tokenStore = {

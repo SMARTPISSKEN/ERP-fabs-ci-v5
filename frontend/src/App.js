@@ -1,51 +1,204 @@
-import { useEffect } from "react";
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./hooks/useAuth";
+import ProtectedRoute from "./components/ProtectedRoute";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
-  return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
-};
+// Pages
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import Clients from "./pages/Clients";
+import ClientDetail from "./pages/ClientDetail";
+import Produits from "./pages/Produits";
+import ProduitDetail from "./pages/ProduitDetail";
+import Commandes from "./pages/Commandes";
+import CommandeDetail from "./pages/CommandeDetail";
+import Factures from "./pages/Factures";
+import FactureDetail from "./pages/FactureDetail";
+import Paiements from "./pages/Paiements";
+import PaiementDetail from "./pages/PaiementDetail";
+import Stock from "./pages/Stock";
+import BonsLivraison from "./pages/BonsLivraison";
+import BonsRetour from "./pages/BonsRetour";
+import Comptabilite from "./pages/Comptabilite";
+import Utilisateurs from "./pages/Utilisateurs";
+import Parametres from "./pages/Parametres";
+import NotFound from "./pages/NotFound";
 
 function App() {
   return (
     <div className="App">
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<Login />} />
+            
+            {/* Protected Routes */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Clients */}
+            <Route
+              path="/clients"
+              element={
+                <ProtectedRoute moduleKey="clients">
+                  <Clients />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/clients/:id"
+              element={
+                <ProtectedRoute moduleKey="clients">
+                  <ClientDetail />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Produits */}
+            <Route
+              path="/produits"
+              element={
+                <ProtectedRoute moduleKey="produits">
+                  <Produits />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/produits/:id"
+              element={
+                <ProtectedRoute moduleKey="produits">
+                  <ProduitDetail />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Commandes */}
+            <Route
+              path="/commandes"
+              element={
+                <ProtectedRoute moduleKey="commandes">
+                  <Commandes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/commandes/:id"
+              element={
+                <ProtectedRoute moduleKey="commandes">
+                  <CommandeDetail />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Factures */}
+            <Route
+              path="/factures"
+              element={
+                <ProtectedRoute moduleKey="factures">
+                  <Factures />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/factures/:id"
+              element={
+                <ProtectedRoute moduleKey="factures">
+                  <FactureDetail />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Paiements */}
+            <Route
+              path="/paiements"
+              element={
+                <ProtectedRoute moduleKey="paiements">
+                  <Paiements />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/paiements/:id"
+              element={
+                <ProtectedRoute moduleKey="paiements">
+                  <PaiementDetail />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Stock */}
+            <Route
+              path="/stock"
+              element={
+                <ProtectedRoute moduleKey="stock">
+                  <Stock />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Bons de Livraison */}
+            <Route
+              path="/livraisons"
+              element={
+                <ProtectedRoute moduleKey="livraisons">
+                  <BonsLivraison />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Bons de Retour */}
+            <Route
+              path="/retours"
+              element={
+                <ProtectedRoute moduleKey="retours">
+                  <BonsRetour />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Comptabilité */}
+            <Route
+              path="/comptabilite"
+              element={
+                <ProtectedRoute moduleKey="comptabilite">
+                  <Comptabilite />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Utilisateurs */}
+            <Route
+              path="/utilisateurs"
+              element={
+                <ProtectedRoute moduleKey="utilisateurs">
+                  <Utilisateurs />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Paramètres */}
+            <Route
+              path="/parametres"
+              element={
+                <ProtectedRoute moduleKey="parametres">
+                  <Parametres />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* 404 */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </div>
   );
